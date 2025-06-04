@@ -1,4 +1,6 @@
-import { Link } from "wouter";
+"use client";
+
+import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -89,7 +91,7 @@ export function CareerCategoryCard({ category }: CareerCategoryCardProps) {
         </div>
         
         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-          <Link href="/assessment">
+          <Link href="/intake">
             <Button className="w-full">
               Assess {category.name} Role
               <ArrowRight className="w-4 h-4 ml-2" />
