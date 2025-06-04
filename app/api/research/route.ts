@@ -5,6 +5,27 @@ import { researchPrompt } from '@/server/promptTemplates';
 
 export const runtime = 'edge';
 
+// Function to sanitize text for database insertion
+function sanitizeText(text: string): string {
+  if (!text) return '';
+  
+  return text
+    // Remove null bytes and other problematic Unicode characters
+    .replace(/\0/g, '')
+    // Normalize Unicode
+    .normalize('NFC')
+    // Remove or replace problematic escape sequences
+    .replace(/\\u[0-9a-fA-F]{4}/g, (match) => {
+      try {
+        return JSON.parse(`"${match}"`);
+      } catch {
+        return '';
+      }
+    })
+    // Limit length to prevent oversized content
+    .substring(0, 50000);
+}
+
 export async function POST(req: NextRequest) {
   console.log('🔍 [Research API] Starting request...');
   
@@ -20,6 +41,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Role is required' }, { status: 400 });
     }
 
+    // Sanitize text inputs
+    const sanitizedRole = sanitizeText(role);
+    const sanitizedResume = sanitizeText(resume || '');
+    
+    console.log('🧹 [Research API] Text sanitization complete');
+    console.log('📏 [Research API] Sanitized resume length:', sanitizedResume.length);
+
     console.log('🔗 [Research API] Creating Supabase client...');
     const supabase = createClient(
       process.env.SUPABASE_URL!,
@@ -30,7 +58,12 @@ export async function POST(req: NextRequest) {
     console.log('💾 [Research API] Inserting profile into database...');
     const { data: profile, error: dbError } = await supabase
       .from('profiles')
-      .insert([{ role, resume, task_hours: tasks }])
+      .insert([{ 
+        role: sanitizedRole, 
+        resume: sanitizedResume, 
+        task_hours: tasks || {},
+        email: null // We're not collecting email in the current flow
+      }])
       .select()
       .single();
 
@@ -48,7 +81,7 @@ export async function POST(req: NextRequest) {
     });
 
     console.log('📝 [Research API] Generating research prompt...');
-    const prompt = researchPrompt({ role, tasks, resume });
+    const prompt = researchPrompt({ role: sanitizedRole, tasks, resume: sanitizedResume });
     console.log('📄 [Research API] Prompt length:', prompt.length);
 
     console.log('🚀 [Research API] Calling OpenAI API...');

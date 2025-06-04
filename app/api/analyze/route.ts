@@ -6,6 +6,19 @@ import { score } from '@/server/score';
 
 export const runtime = 'edge';
 
+// Function to sanitize text for database insertion
+function sanitizeText(text: string): string {
+  if (!text) return '';
+  
+  return text
+    // Remove null bytes and other problematic Unicode characters
+    .replace(/\0/g, '')
+    // Normalize Unicode
+    .normalize('NFC')
+    // Limit length to prevent oversized content
+    .substring(0, 50000);
+}
+
 export async function POST(req: NextRequest) {
   console.log('🔬 [Analyze API] Starting analysis request...');
   
@@ -45,9 +58,10 @@ export async function POST(req: NextRequest) {
     const prompt = analysisPrompt(JSON.stringify(evidence));
     console.log('📄 [Analyze API] Prompt length:', prompt.length);
 
-    console.log('🚀 [Analyze API] Calling OpenAI API (o3 model)...');
+    console.log('🚀 [Analyze API] Calling OpenAI API (gpt-4o model)...');
+    // Use gpt-4o instead of o3 for now since o3 might not be available
     const analysis = await openai.chat.completions.create({
-      model: 'o3',
+      model: 'gpt-4o',
       temperature: 0,
       messages: [{ role: 'system', content: prompt }]
     });
@@ -68,6 +82,10 @@ export async function POST(req: NextRequest) {
     console.log('📄 [Analyze API] Preview length:', preview?.length);
     console.log('📄 [Analyze API] Full report length:', full?.length);
 
+    // Sanitize the text outputs
+    const sanitizedPreview = sanitizeText(preview?.trim() || 'Analysis preview not available');
+    const sanitizedFullReport = sanitizeText(full?.trim() || 'Full report not available');
+
     console.log('🧮 [Analyze API] Calculating risk score...');
     const scoreVal = score(evidence);
     console.log('📊 [Analyze API] Calculated score:', scoreVal);
@@ -78,9 +96,9 @@ export async function POST(req: NextRequest) {
       .insert([{
         profile_id,
         score: scoreVal,
-        preview: preview?.trim() || 'Analysis preview not available',
-        full_report: full?.trim() || 'Full report not available',
-        evidence
+        preview: sanitizedPreview,
+        full_report: sanitizedFullReport,
+        evidence: evidence
       }])
       .select()
       .single();

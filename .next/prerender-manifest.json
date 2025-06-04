@@ -1,30 +1,6 @@
 {
   "version": 4,
   "routes": {
-    "/paywall": {
-      "experimentalBypassFor": [
-        {
-          "type": "header",
-          "key": "Next-Action"
-        },
-        {
-          "type": "header",
-          "key": "content-type",
-          "value": "multipart/form-data;.*"
-        }
-      ],
-      "initialRevalidateSeconds": false,
-      "srcRoute": "/paywall",
-      "dataRoute": "/paywall.rsc",
-      "allowHeader": [
-        "host",
-        "x-matched-path",
-        "x-prerender-revalidate",
-        "x-prerender-revalidate-if-generated",
-        "x-next-revalidated-tags",
-        "x-next-revalidate-tag-token"
-      ]
-    },
     "/intake": {
       "experimentalBypassFor": [
         {
@@ -72,13 +48,37 @@
         "x-next-revalidated-tags",
         "x-next-revalidate-tag-token"
       ]
+    },
+    "/paywall": {
+      "experimentalBypassFor": [
+        {
+          "type": "header",
+          "key": "Next-Action"
+        },
+        {
+          "type": "header",
+          "key": "content-type",
+          "value": "multipart/form-data;.*"
+        }
+      ],
+      "initialRevalidateSeconds": false,
+      "srcRoute": "/paywall",
+      "dataRoute": "/paywall.rsc",
+      "allowHeader": [
+        "host",
+        "x-matched-path",
+        "x-prerender-revalidate",
+        "x-prerender-revalidate-if-generated",
+        "x-next-revalidated-tags",
+        "x-next-revalidate-tag-token"
+      ]
     }
   },
   "dynamicRoutes": {},
   "notFoundRoutes": [],
   "preview": {
-    "previewModeId": "84e5cbe17f9e3b0e9100f5b92b4c367d",
-    "previewModeSigningKey": "8bc23b56d79239ed304e4b88b0bbf89766bf508fc1f6dcad573ff16849b7d35c",
-    "previewModeEncryptionKey": "3fe2d7730f6e85d0ac34d387029f99b293e6a146a320a46d0cf2bb9a5888a1fb"
+    "previewModeId": "fa52b89c8fa043228ee4e25f31c28b85",
+    "previewModeSigningKey": "b4a469ddee394e994e97ee9dfd5a63bc26478ac6976a6aa5dc0e6d62a466f8d9",
+    "previewModeEncryptionKey": "3b0bfbbf90a77909ba97f08cd48de4558a81ae4abbfe775e320db38bbfe3d1b8"
   }
 }
