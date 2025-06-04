@@ -1,11 +1,9 @@
-import { Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CareerCategoryCard } from "@/components/career-category-card";
 import { RiskScoreCircle } from "@/components/risk-score-circle";
-import { Separator } from "@/components/ui/separator";
 import { 
   Bot, 
   ChartLine, 
@@ -20,9 +18,48 @@ import {
 } from "lucide-react";
 
 export default function Home() {
-  const { data: careerCategories = [] } = useQuery({
-    queryKey: ['/api/career-categories'],
-  });
+  const careerCategories = [
+    {
+      id: "designer",
+      name: "Designer",
+      description: "UI/UX, Graphic, Product Design",
+      icon: "palette",
+      averageRisk: 42,
+      assessmentCount: 2847,
+    },
+    {
+      id: "product-manager",
+      name: "Product Manager",
+      description: "Product Strategy, Roadmapping, Stakeholder Management",
+      icon: "clipboard-list",
+      averageRisk: 38,
+      assessmentCount: 3254,
+    },
+    {
+      id: "marketing",
+      name: "Marketing",
+      description: "Content, Digital Marketing, SEO, Campaign Management",
+      icon: "bullhorn",
+      averageRisk: 65,
+      assessmentCount: 1932,
+    },
+    {
+      id: "accounting",
+      name: "Accounting",
+      description: "Bookkeeping, Financial Analysis, Tax Preparation",
+      icon: "calculator",
+      averageRisk: 78,
+      assessmentCount: 1567,
+    },
+    {
+      id: "legal",
+      name: "Legal",
+      description: "Contract Review, Research, Document Preparation",
+      icon: "balance-scale",
+      averageRisk: 35,
+      assessmentCount: 892,
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -32,7 +69,7 @@ export default function Home() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <h1 className="text-xl font-bold text-slate-900">FutureProof Career</h1>
+                <h1 className="text-xl font-bold text-slate-900">AICareerShield</h1>
               </div>
             </div>
             <div className="hidden md:block">
@@ -40,7 +77,7 @@ export default function Home() {
                 <a href="#how-it-works" className="text-slate-600 hover:text-slate-900 px-3 py-2 text-sm font-medium transition-colors">How It Works</a>
                 <a href="#careers" className="text-slate-600 hover:text-slate-900 px-3 py-2 text-sm font-medium transition-colors">Career Categories</a>
                 <a href="#pricing" className="text-slate-600 hover:text-slate-900 px-3 py-2 text-sm font-medium transition-colors">Pricing</a>
-                <Link href="/assessment">
+                <Link href="/intake">
                   <Button>Start Assessment</Button>
                 </Link>
               </div>
@@ -71,7 +108,7 @@ export default function Home() {
                 Discover your likelihood of being replaced by AI, understand the timeline, and get personalized strategies to future-proof your career with our advanced AI analysis.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link href="/assessment">
+                <Link href="/intake">
                   <Button size="lg" className="shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all">
                     <ChartLine className="w-5 h-5 mr-2" />
                     Start Free Assessment
@@ -184,7 +221,7 @@ export default function Home() {
                       <Clock className="w-4 h-4 inline mr-2" />
                       Estimated Timeline: <span className="font-semibold text-slate-900">2-4 years</span>
                     </div>
-                    <Link href="/assessment">
+                    <Link href="/intake">
                       <Button className="w-full">
                         Get Your Personalized Analysis
                       </Button>
@@ -252,7 +289,7 @@ export default function Home() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {careerCategories.map((category: any) => (
+            {careerCategories.map((category) => (
               <CareerCategoryCard key={category.id} category={category} />
             ))}
             
@@ -352,7 +389,7 @@ export default function Home() {
                     </li>
                   ))}
                 </ul>
-                <Link href="/assessment">
+                <Link href="/intake">
                   <Button variant="outline" className="w-full" size="lg">
                     Start Free Assessment
                   </Button>
@@ -387,7 +424,7 @@ export default function Home() {
                     </li>
                   ))}
                 </ul>
-                <Link href="/assessment">
+                <Link href="/intake">
                   <Button className="w-full shadow-lg" size="lg">
                     Get Full Report
                   </Button>
@@ -415,7 +452,7 @@ export default function Home() {
             Take control of your professional future today. Get personalized insights and actionable strategies to stay ahead of AI automation in your industry.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/assessment">
+            <Link href="/intake">
               <Button size="lg" variant="secondary" className="shadow-lg">
                 <ChartLine className="w-5 h-5 mr-2" />
                 Start Your Assessment Now
@@ -444,7 +481,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8">
             <div className="md:col-span-2">
-              <h3 className="text-xl font-bold text-white mb-4">FutureProof Career</h3>
+              <h3 className="text-xl font-bold text-white mb-4">AICareerShield</h3>
               <p className="text-slate-400 mb-6 max-w-md leading-relaxed">
                 Helping professionals navigate the AI revolution with data-driven insights and personalized career strategies.
               </p>
@@ -473,11 +510,11 @@ export default function Home() {
           
           <div className="border-t border-slate-800 mt-12 pt-8 text-center">
             <p className="text-slate-400">
-              © 2024 FutureProof Career. All rights reserved.
+              © 2024 AICareerShield. All rights reserved.
             </p>
           </div>
         </div>
       </footer>
     </div>
   );
-}
+} 

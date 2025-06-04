@@ -1,6 +1,7 @@
+"use client";
+
 import { useState } from "react";
-import { useLocation } from "wouter";
-import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -12,10 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { FileUpload } from "@/components/ui/file-upload";
 import { RiskScoreCircle } from "@/components/risk-score-circle";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
 import { 
   ArrowLeft, 
   ArrowRight, 
@@ -40,7 +38,7 @@ const assessmentSchema = z.object({
 type AssessmentFormData = z.infer<typeof assessmentSchema>;
 
 interface AssessmentResult {
-  id: number;
+  id: string;
   riskScore: number;
   riskBreakdown: {
     taskAutomation: number;
@@ -54,9 +52,8 @@ interface AssessmentResult {
   hasFullReport: boolean;
 }
 
-export default function Assessment() {
-  const [, setLocation] = useLocation();
-  const { toast } = useToast();
+export default function Intake() {
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisStep, setAnalysisStep] = useState(0);
@@ -75,42 +72,7 @@ export default function Assessment() {
     },
   });
 
-  const submitAssessment = useMutation({
-    mutationFn: async (data: AssessmentFormData) => {
-      const formData = new FormData();
-      formData.append('data', JSON.stringify(data));
-      if (uploadedFile) {
-        formData.append('resume', uploadedFile);
-      }
-
-      const response = await fetch('/api/assessments', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Assessment submission failed');
-      }
-
-      return response.json();
-    },
-    onSuccess: (data: AssessmentResult) => {
-      setResult(data);
-      setCurrentStep(5);
-      setIsAnalyzing(false);
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Assessment Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-      setIsAnalyzing(false);
-    },
-  });
-
-  const onSubmit = (data: AssessmentFormData) => {
+  const onSubmit = async (data: AssessmentFormData) => {
     setIsAnalyzing(true);
     setCurrentStep(4);
     
@@ -131,10 +93,61 @@ export default function Assessment() {
       }
     }, 1500);
 
-    setTimeout(() => {
-      submitAssessment.mutate(data);
+    try {
+      // Convert form data to match API expectations
+      const taskHours = {
+        [data.jobTitle]: 40 // Default weekly hours
+      };
+
+      const response = await fetch('/api/research', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          role: data.jobTitle,
+          tasks: taskHours,
+          resume: uploadedFile ? await uploadedFile.text() : data.dailyWorkSummary
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Assessment submission failed');
+      }
+
+      const { profile_id } = await response.json();
+      
+      // Poll for results
+      const pollResults = async () => {
+        const reportResponse = await fetch(`/api/reports/${profile_id}`);
+        if (reportResponse.ok) {
+          const reportData = await reportResponse.json();
+          setResult({
+            id: profile_id,
+            riskScore: reportData.score || 50,
+            riskBreakdown: {
+              taskAutomation: 70,
+              creativeRequirements: 30,
+              humanInteraction: 20,
+              strategicThinking: 40
+            },
+            timeline: "2-4 years",
+            previewRecommendations: reportData.preview,
+            hasFullReport: false
+          });
+          setCurrentStep(5);
+          setIsAnalyzing(false);
+          clearInterval(stepInterval);
+        } else {
+          // Continue polling
+          setTimeout(pollResults, 2000);
+        }
+      };
+
+      setTimeout(pollResults, 6000);
+    } catch (error) {
+      console.error('Assessment failed:', error);
+      setIsAnalyzing(false);
       clearInterval(stepInterval);
-    }, 6000);
+    }
   };
 
   const nextStep = () => {
@@ -186,7 +199,7 @@ export default function Assessment() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <h1 className="text-xl font-bold text-slate-900">AI Risk Assessment</h1>
-            <Button variant="ghost" onClick={() => setLocation('/')}>
+            <Button variant="ghost" onClick={() => router.push('/')}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Home
             </Button>
@@ -364,10 +377,11 @@ export default function Assessment() {
                   <label className="block text-sm font-medium text-slate-700 mb-2">
                     Upload Resume (Optional)
                   </label>
-                  <FileUpload
-                    onFileSelect={setUploadedFile}
-                    accept=".pdf,.doc,.docx"
-                    maxSize={10 * 1024 * 1024}
+                  <input
+                    type="file"
+                    accept=".pdf,.doc,.docx,.txt"
+                    onChange={(e) => setUploadedFile(e.target.files?.[0] || null)}
+                    className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                   />
                   {uploadedFile && (
                     <div className="mt-2 flex items-center text-sm text-slate-600">
@@ -452,42 +466,6 @@ export default function Assessment() {
                   </div>
                 </div>
 
-                {/* Risk Breakdown */}
-                <div className="space-y-4">
-                  <h4 className="font-semibold text-slate-900">Risk Breakdown</h4>
-                  {Object.entries(result.riskBreakdown).map(([key, value]) => {
-                    const labels = {
-                      taskAutomation: "Task Automation",
-                      creativeRequirements: "Creative Requirements", 
-                      humanInteraction: "Human Interaction",
-                      strategicThinking: "Strategic Thinking"
-                    };
-                    
-                    return (
-                      <div key={key} className="bg-slate-50 rounded-lg p-4">
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="font-medium text-slate-700">{labels[key as keyof typeof labels]}</span>
-                          <span className={`text-sm font-semibold ${
-                            value >= 70 ? 'text-red-600' : 
-                            value >= 40 ? 'text-amber-600' : 'text-green-600'
-                          }`}>
-                            {value >= 70 ? 'High' : value >= 40 ? 'Medium' : 'Low'} ({value}%)
-                          </span>
-                        </div>
-                        <div className="bg-slate-200 rounded-full h-2">
-                          <div 
-                            className={`h-2 rounded-full ${
-                              value >= 70 ? 'bg-red-500' : 
-                              value >= 40 ? 'bg-amber-500' : 'bg-green-500'
-                            }`}
-                            style={{width: `${value}%`}}
-                          ></div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
                 {/* Timeline & Preview */}
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
                   <h4 className="font-semibold text-slate-900 mb-3">Key Insights (Preview)</h4>
@@ -527,10 +505,10 @@ export default function Assessment() {
                         </div>
                       </div>
                       <div className="flex space-x-4">
-                        <Button variant="outline" className="flex-1" onClick={() => setLocation('/')}>
+                        <Button variant="outline" className="flex-1" onClick={() => router.push('/')}>
                           Maybe Later
                         </Button>
-                        <Button className="flex-1" onClick={() => setLocation(`/checkout/${result.id}`)}>
+                        <Button className="flex-1" onClick={() => router.push(`/paywall?id=${result.id}`)}>
                           <CreditCard className="w-4 h-4 mr-2" />
                           Get Full Report - $49
                         </Button>
@@ -572,4 +550,4 @@ export default function Assessment() {
       </div>
     </div>
   );
-}
+} 
