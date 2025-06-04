@@ -25,30 +25,6 @@
         "x-next-revalidate-tag-token"
       ]
     },
-    "/intake": {
-      "experimentalBypassFor": [
-        {
-          "type": "header",
-          "key": "Next-Action"
-        },
-        {
-          "type": "header",
-          "key": "content-type",
-          "value": "multipart/form-data;.*"
-        }
-      ],
-      "initialRevalidateSeconds": false,
-      "srcRoute": "/intake",
-      "dataRoute": "/intake.rsc",
-      "allowHeader": [
-        "host",
-        "x-matched-path",
-        "x-prerender-revalidate",
-        "x-prerender-revalidate-if-generated",
-        "x-next-revalidated-tags",
-        "x-next-revalidate-tag-token"
-      ]
-    },
     "/": {
       "experimentalBypassFor": [
         {
@@ -72,13 +48,37 @@
         "x-next-revalidated-tags",
         "x-next-revalidate-tag-token"
       ]
+    },
+    "/intake": {
+      "experimentalBypassFor": [
+        {
+          "type": "header",
+          "key": "Next-Action"
+        },
+        {
+          "type": "header",
+          "key": "content-type",
+          "value": "multipart/form-data;.*"
+        }
+      ],
+      "initialRevalidateSeconds": false,
+      "srcRoute": "/intake",
+      "dataRoute": "/intake.rsc",
+      "allowHeader": [
+        "host",
+        "x-matched-path",
+        "x-prerender-revalidate",
+        "x-prerender-revalidate-if-generated",
+        "x-next-revalidated-tags",
+        "x-next-revalidate-tag-token"
+      ]
     }
   },
   "dynamicRoutes": {},
   "notFoundRoutes": [],
   "preview": {
-    "previewModeId": "38c521676b2447361318c9e012cb311c",
-    "previewModeSigningKey": "3ccb393dbc343e3d0ff58d1ad6b0db489401f7b97be9d4f8b1ebe4140268215b",
-    "previewModeEncryptionKey": "01984ecb1a4ecaa335f73b450c3073346d4e51e3d85a536f333fe2b8086ff0c0"
+    "previewModeId": "dbb4220c4fe557f58488ff35c22ff4e6",
+    "previewModeSigningKey": "183eeb7a113b8a337fb4200c5f29d1a7502af2b57a3432c8c4c19c2b78f47128",
+    "previewModeEncryptionKey": "a297c97ab3617060c87b89a417d54e2dc091bea37094cc30b597e153a31ec85d"
   }
 }
