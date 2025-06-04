@@ -73,6 +73,9 @@ export default function Intake() {
   });
 
   const onSubmit = async (data: AssessmentFormData) => {
+    console.log('🚀 [Frontend] Starting assessment submission...');
+    console.log('📋 [Frontend] Form data:', data);
+    
     setIsAnalyzing(true);
     setCurrentStep(4);
     
@@ -99,54 +102,103 @@ export default function Intake() {
         [data.jobTitle]: 40 // Default weekly hours
       };
 
+      console.log('📄 [Frontend] Uploaded file:', uploadedFile?.name, uploadedFile?.type);
+
+      let resumeContent = data.dailyWorkSummary;
+      if (uploadedFile) {
+        console.log('📖 [Frontend] Reading uploaded file...');
+        try {
+          resumeContent = await uploadedFile.text();
+          console.log('✅ [Frontend] File read successfully, length:', resumeContent.length);
+        } catch (fileError) {
+          console.error('❌ [Frontend] Error reading file:', fileError);
+          console.log('📄 [Frontend] Falling back to daily work summary');
+          resumeContent = data.dailyWorkSummary;
+        }
+      }
+
+      const requestBody = {
+        role: data.jobTitle,
+        tasks: taskHours,
+        resume: resumeContent
+      };
+      
+      console.log('📤 [Frontend] Sending request to /api/research');
+      console.log('📋 [Frontend] Request body:', {
+        role: requestBody.role,
+        tasks: requestBody.tasks,
+        resume_length: requestBody.resume.length
+      });
+
       const response = await fetch('/api/research', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          role: data.jobTitle,
-          tasks: taskHours,
-          resume: uploadedFile ? await uploadedFile.text() : data.dailyWorkSummary
-        })
+        body: JSON.stringify(requestBody)
       });
 
+      console.log('📥 [Frontend] Response status:', response.status);
+      console.log('📥 [Frontend] Response ok:', response.ok);
+
       if (!response.ok) {
-        throw new Error('Assessment submission failed');
+        const errorText = await response.text();
+        console.error('❌ [Frontend] API error response:', errorText);
+        throw new Error(`Assessment submission failed: ${response.status} ${errorText}`);
       }
 
-      const { profile_id } = await response.json();
+      const responseData = await response.json();
+      console.log('✅ [Frontend] API response:', responseData);
+      const { profile_id } = responseData;
       
+      console.log('🔄 [Frontend] Starting polling for results...');
       // Poll for results
       const pollResults = async () => {
-        const reportResponse = await fetch(`/api/reports/${profile_id}`);
-        if (reportResponse.ok) {
-          const reportData = await reportResponse.json();
-          setResult({
-            id: profile_id,
-            riskScore: reportData.score || 50,
-            riskBreakdown: {
-              taskAutomation: 70,
-              creativeRequirements: 30,
-              humanInteraction: 20,
-              strategicThinking: 40
-            },
-            timeline: "2-4 years",
-            previewRecommendations: reportData.preview,
-            hasFullReport: false
-          });
-          setCurrentStep(5);
-          setIsAnalyzing(false);
-          clearInterval(stepInterval);
-        } else {
-          // Continue polling
+        console.log('🔍 [Frontend] Polling for report...');
+        try {
+          const reportResponse = await fetch(`/api/reports/${profile_id}`);
+          console.log('📊 [Frontend] Report response status:', reportResponse.status);
+          
+          if (reportResponse.ok) {
+            const reportData = await reportResponse.json();
+            console.log('✅ [Frontend] Report received:', {
+              id: reportData.id,
+              score: reportData.score,
+              preview_length: reportData.preview?.length
+            });
+            
+            setResult({
+              id: profile_id,
+              riskScore: reportData.score || 50,
+              riskBreakdown: {
+                taskAutomation: 70,
+                creativeRequirements: 30,
+                humanInteraction: 20,
+                strategicThinking: 40
+              },
+              timeline: "2-4 years",
+              previewRecommendations: reportData.preview,
+              hasFullReport: false
+            });
+            setCurrentStep(5);
+            setIsAnalyzing(false);
+            clearInterval(stepInterval);
+          } else {
+            console.log('⏳ [Frontend] Report not ready yet, continuing to poll...');
+            // Continue polling
+            setTimeout(pollResults, 2000);
+          }
+        } catch (pollError) {
+          console.error('❌ [Frontend] Polling error:', pollError);
           setTimeout(pollResults, 2000);
         }
       };
 
       setTimeout(pollResults, 6000);
     } catch (error) {
-      console.error('Assessment failed:', error);
+      console.error('💥 [Frontend] Assessment failed:', error);
+      console.error('📚 [Frontend] Error details:', error instanceof Error ? error.stack : 'No stack trace');
       setIsAnalyzing(false);
       clearInterval(stepInterval);
+      // TODO: Show error message to user
     }
   };
 

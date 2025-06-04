@@ -1,11 +1,11 @@
 {
   "/_not-found/page": "/_not-found",
+  "/(forms)/intake/page": "/intake",
   "/page": "/",
   "/(forms)/paywall/page": "/paywall",
-  "/(forms)/intake/page": "/intake",
-  "/(api)/payment-success/route": "/payment-success",
   "/(api)/create-payment-intent/route": "/create-payment-intent",
-  "/(api)/analyze/route": "/analyze",
+  "/(api)/payment-success/route": "/payment-success",
   "/(api)/reports/[id]/route": "/reports/[id]",
+  "/(api)/analyze/route": "/analyze",
   "/(api)/research/route": "/research"
 }
