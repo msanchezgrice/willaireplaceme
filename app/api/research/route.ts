@@ -26,6 +26,35 @@ function sanitizeText(text: string): string {
     .substring(0, 50000);
 }
 
+// Function to trigger analysis directly (instead of fire-and-forget)
+async function triggerAnalysis(profileId: string, evidence: any) {
+  console.log('🔥 [Research API] Starting direct analysis trigger...');
+  
+  try {
+    const analysisUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/api/analyze`;
+    console.log('🎯 [Research API] Analysis URL:', analysisUrl);
+    
+    const response = await fetch(analysisUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ profile_id: profileId, evidence })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ [Research API] Analysis failed:', response.status, errorText);
+      throw new Error(`Analysis failed: ${response.status} ${errorText}`);
+    }
+
+    const result = await response.json();
+    console.log('✅ [Research API] Analysis triggered successfully:', result);
+    return result;
+  } catch (error) {
+    console.error('💥 [Research API] Analysis trigger error:', error);
+    throw error;
+  }
+}
+
 export async function POST(req: NextRequest) {
   console.log('🔍 [Research API] Starting request...');
   
@@ -113,18 +142,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid AI response format' }, { status: 500 });
     }
 
-    console.log('🔥 [Research API] Triggering analysis (fire-and-forget)...');
-    // Fire-and-forget analysis
-    const analysisUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/api/analyze`;
-    console.log('🎯 [Research API] Analysis URL:', analysisUrl);
-    
-    fetch(analysisUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ profile_id: profile.id, evidence })
-    }).catch(error => {
-      console.error('❌ [Research API] Analysis trigger failed:', error);
-    });
+    console.log('🔥 [Research API] Triggering analysis...');
+    // Call analysis directly instead of fire-and-forget
+    try {
+      await triggerAnalysis(profile.id, evidence);
+      console.log('✅ [Research API] Analysis completed successfully');
+    } catch (analysisError) {
+      console.error('❌ [Research API] Analysis failed, but profile created:', analysisError);
+      // Don't fail the entire request if analysis fails - let user know to try again
+    }
 
     console.log('✅ [Research API] Request completed successfully');
     return NextResponse.json({ status: 'processing', profile_id: profile.id });
