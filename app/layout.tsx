@@ -1,18 +1,9 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider } from '@clerk/nextjs';
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff2",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff2",
-  variable: "--font-geist-mono",
-  weight: "100 900",
-});
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "AICareerShield - Will AI Replace Your Career?",
@@ -38,9 +29,7 @@ export default function RootLayout({
       }}
     >
       <html lang="en">
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        >
+        <body className={`${inter.className} antialiased`}>
           {children}
         </body>
       </html>
