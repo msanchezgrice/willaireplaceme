@@ -2,9 +2,9 @@
   "version": 1,
   "functions": {
     "/api/payment-success": {},
-    "/api/analyze": {},
     "/api/create-payment-intent": {},
     "/api/reports/[id]": {},
+    "/api/analyze": {},
     "/api/research": {}
   }
 }

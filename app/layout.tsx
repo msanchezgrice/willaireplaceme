@@ -15,9 +15,22 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
+  if (!publishableKey) {
+    // If no Clerk key is available (e.g., during build), render without ClerkProvider
+    return (
+      <html lang="en">
+        <body className={`${inter.className} antialiased`}>
+          {children}
+        </body>
+      </html>
+    );
+  }
+
   return (
     <ClerkProvider
-      publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+      publishableKey={publishableKey}
       appearance={{
         elements: {
           formButtonPrimary: 'bg-primary hover:bg-primary/90 text-primary-foreground',

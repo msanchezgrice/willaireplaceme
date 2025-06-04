@@ -23,6 +23,9 @@ import {
   Lightbulb
 } from "lucide-react";
 
+// Prevent static generation for this page
+export const dynamic = 'force-dynamic';
+
 interface ReportData {
   id: string;
   score: number;

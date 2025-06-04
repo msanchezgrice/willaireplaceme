@@ -21,6 +21,22 @@
         "nxtPid": "nxtPid"
       },
       "namedRegex": "^/api/reports/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/sign-in/[[...sign-in]]",
+      "regex": "^/sign\\-in(?:/(.+?))?(?:/)?$",
+      "routeKeys": {
+        "nxtPsignin": "nxtPsign-in"
+      },
+      "namedRegex": "^/sign\\-in(?:/(?<nxtPsignin>.+?))?(?:/)?$"
+    },
+    {
+      "page": "/sign-up/[[...sign-up]]",
+      "regex": "^/sign\\-up(?:/(.+?))?(?:/)?$",
+      "routeKeys": {
+        "nxtPsignup": "nxtPsign-up"
+      },
+      "namedRegex": "^/sign\\-up(?:/(?<nxtPsignup>.+?))?(?:/)?$"
     }
   ],
   "staticRoutes": [
@@ -37,6 +53,12 @@
       "namedRegex": "^/_not\\-found(?:/)?$"
     },
     {
+      "page": "/auth-callback",
+      "regex": "^/auth\\-callback(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/auth\\-callback(?:/)?$"
+    },
+    {
       "page": "/intake",
       "regex": "^/intake(?:/)?$",
       "routeKeys": {},
@@ -47,6 +69,12 @@
       "regex": "^/paywall(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/paywall(?:/)?$"
+    },
+    {
+      "page": "/report",
+      "regex": "^/report(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/report(?:/)?$"
     }
   ],
   "dataRoutes": [],

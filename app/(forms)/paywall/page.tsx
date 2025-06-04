@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, ArrowLeft, Shield, Mail, User } from "lucide-react";
 
+// Prevent static generation for this page
+export const dynamic = 'force-dynamic';
+
 function PaywallContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
