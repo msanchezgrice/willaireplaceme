@@ -25,30 +25,6 @@
         "x-next-revalidate-tag-token"
       ]
     },
-    "/": {
-      "experimentalBypassFor": [
-        {
-          "type": "header",
-          "key": "Next-Action"
-        },
-        {
-          "type": "header",
-          "key": "content-type",
-          "value": "multipart/form-data;.*"
-        }
-      ],
-      "initialRevalidateSeconds": false,
-      "srcRoute": "/",
-      "dataRoute": "/index.rsc",
-      "allowHeader": [
-        "host",
-        "x-matched-path",
-        "x-prerender-revalidate",
-        "x-prerender-revalidate-if-generated",
-        "x-next-revalidated-tags",
-        "x-next-revalidate-tag-token"
-      ]
-    },
     "/paywall": {
       "experimentalBypassFor": [
         {
@@ -72,13 +48,37 @@
         "x-next-revalidated-tags",
         "x-next-revalidate-tag-token"
       ]
+    },
+    "/": {
+      "experimentalBypassFor": [
+        {
+          "type": "header",
+          "key": "Next-Action"
+        },
+        {
+          "type": "header",
+          "key": "content-type",
+          "value": "multipart/form-data;.*"
+        }
+      ],
+      "initialRevalidateSeconds": false,
+      "srcRoute": "/",
+      "dataRoute": "/index.rsc",
+      "allowHeader": [
+        "host",
+        "x-matched-path",
+        "x-prerender-revalidate",
+        "x-prerender-revalidate-if-generated",
+        "x-next-revalidated-tags",
+        "x-next-revalidate-tag-token"
+      ]
     }
   },
   "dynamicRoutes": {},
   "notFoundRoutes": [],
   "preview": {
-    "previewModeId": "fa52b89c8fa043228ee4e25f31c28b85",
-    "previewModeSigningKey": "b4a469ddee394e994e97ee9dfd5a63bc26478ac6976a6aa5dc0e6d62a466f8d9",
-    "previewModeEncryptionKey": "3b0bfbbf90a77909ba97f08cd48de4558a81ae4abbfe775e320db38bbfe3d1b8"
+    "previewModeId": "7bd3cd3379716522dbcf1f551779232e",
+    "previewModeSigningKey": "bf66a5a1bf23d9806c3cd8c81802fb1729bb4d4b16d8ab2cc32d1143e645552e",
+    "previewModeEncryptionKey": "ba6897f029e476672b4be1393b128432373815badd2eb3cd5207b2e8361b47c3"
   }
 }

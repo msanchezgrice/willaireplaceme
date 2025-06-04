@@ -1,10 +1,10 @@
 {
   "version": 1,
   "functions": {
-    "/api/payment-success": {},
-    "/api/create-payment-intent": {},
-    "/api/reports/[id]": {},
     "/api/analyze": {},
+    "/api/payment-success": {},
+    "/api/reports/[id]": {},
+    "/api/create-payment-intent": {},
     "/api/research": {}
   }
 }
