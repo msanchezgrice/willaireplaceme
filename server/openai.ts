@@ -1,5 +1,4 @@
 import OpenAI from "openai";
-import pdf from 'pdf-parse';
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ 
@@ -30,8 +29,9 @@ interface RiskAnalysis {
 
 export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
   try {
-    const data = await pdf(buffer);
-    return data.text;
+    // PDF extraction temporarily disabled - return empty string
+    console.log('PDF upload received but extraction not available');
+    return '';
   } catch (error) {
     console.error('PDF extraction error:', error);
     return '';

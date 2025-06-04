@@ -1,53 +1,27 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import Stripe from "stripe";
-import multer from "multer";
 import { storage } from "./storage";
 import { insertAssessmentSchema } from "@shared/schema";
-import { analyzeCareerRisk, extractTextFromPDF } from "./openai";
+import { analyzeCareerRisk } from "./openai";
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
+// Make Stripe optional for development
+let stripe: Stripe | null = null;
+if (process.env.STRIPE_SECRET_KEY) {
+  stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 }
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2023-10-16",
-});
-
-// Configure multer for file uploads
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
-  },
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'application/pdf' || 
-        file.mimetype === 'application/msword' || 
-        file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-      cb(null, true);
-    } else {
-      cb(new Error('Invalid file type. Only PDF, DOC, and DOCX are allowed.'));
-    }
-  }
-});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
   // Submit assessment data and get initial analysis
-  app.post("/api/assessments", upload.single('resume'), async (req, res) => {
+  app.post("/api/assessments", async (req, res) => {
     try {
-      const body = JSON.parse(req.body.data || '{}');
-      const validatedData = insertAssessmentSchema.parse(body);
-      
-      let resumeText = '';
-      if (req.file) {
-        resumeText = await extractTextFromPDF(req.file.buffer);
-      }
+      const validatedData = insertAssessmentSchema.parse(req.body);
 
       // Create assessment record
       const assessment = await storage.createAssessment({
         ...validatedData,
-        resumeText: resumeText || null,
+        resumeText: null,
       });
 
       // Perform AI analysis
@@ -57,7 +31,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         yearsExperience: assessment.yearsExperience,
         dailyWorkSummary: assessment.dailyWorkSummary,
         keySkills: assessment.keySkills || '',
-        resumeText: assessment.resumeText || '',
+        resumeText: '',
       });
 
       // Update assessment with analysis results
@@ -123,6 +97,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Create payment intent for full report
   app.post("/api/create-payment-intent", async (req, res) => {
+    if (!stripe) {
+      return res.status(503).json({ message: "Payment processing not configured" });
+    }
+
     try {
       const { assessmentId } = req.body;
       

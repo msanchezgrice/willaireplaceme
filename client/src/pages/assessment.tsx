@@ -77,22 +77,7 @@ export default function Assessment() {
 
   const submitAssessment = useMutation({
     mutationFn: async (data: AssessmentFormData) => {
-      const formData = new FormData();
-      formData.append('data', JSON.stringify(data));
-      if (uploadedFile) {
-        formData.append('resume', uploadedFile);
-      }
-
-      const response = await fetch('/api/assessments', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Assessment submission failed');
-      }
-
+      const response = await apiRequest('POST', '/api/assessments', data);
       return response.json();
     },
     onSuccess: (data: AssessmentResult) => {
