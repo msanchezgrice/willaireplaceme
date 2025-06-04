@@ -15,12 +15,12 @@
   "headers": [],
   "dynamicRoutes": [
     {
-      "page": "/reports/[id]",
-      "regex": "^/reports/([^/]+?)(?:/)?$",
+      "page": "/api/reports/[id]",
+      "regex": "^/api/reports/([^/]+?)(?:/)?$",
       "routeKeys": {
         "nxtPid": "nxtPid"
       },
-      "namedRegex": "^/reports/(?<nxtPid>[^/]+?)(?:/)?$"
+      "namedRegex": "^/api/reports/(?<nxtPid>[^/]+?)(?:/)?$"
     }
   ],
   "staticRoutes": [
@@ -37,40 +37,16 @@
       "namedRegex": "^/_not\\-found(?:/)?$"
     },
     {
-      "page": "/analyze",
-      "regex": "^/analyze(?:/)?$",
-      "routeKeys": {},
-      "namedRegex": "^/analyze(?:/)?$"
-    },
-    {
-      "page": "/create-payment-intent",
-      "regex": "^/create\\-payment\\-intent(?:/)?$",
-      "routeKeys": {},
-      "namedRegex": "^/create\\-payment\\-intent(?:/)?$"
-    },
-    {
       "page": "/intake",
       "regex": "^/intake(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/intake(?:/)?$"
     },
     {
-      "page": "/payment-success",
-      "regex": "^/payment\\-success(?:/)?$",
-      "routeKeys": {},
-      "namedRegex": "^/payment\\-success(?:/)?$"
-    },
-    {
       "page": "/paywall",
       "regex": "^/paywall(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/paywall(?:/)?$"
-    },
-    {
-      "page": "/research",
-      "regex": "^/research(?:/)?$",
-      "routeKeys": {},
-      "namedRegex": "^/research(?:/)?$"
     }
   ],
   "dataRoutes": [],

@@ -2,101 +2,70 @@
   "version": 3,
   "middleware": {},
   "functions": {
-    "/(api)/create-payment-intent/route": {
+    "/api/create-payment-intent/route": {
       "files": [
         "server/server-reference-manifest.js",
-        "server/app/(api)/create-payment-intent/route_client-reference-manifest.js",
+        "server/app/api/create-payment-intent/route_client-reference-manifest.js",
         "server/middleware-build-manifest.js",
         "server/middleware-react-loadable-manifest.js",
         "server/next-font-manifest.js",
         "server/interception-route-rewrite-manifest.js",
         "server/edge-runtime-webpack.js",
         "server/edge-chunks/319.js",
-        "server/app/(api)/create-payment-intent/route.js"
+        "server/app/api/create-payment-intent/route.js"
       ],
-      "name": "app/(api)/create-payment-intent/route",
-      "page": "/(api)/create-payment-intent/route",
+      "name": "app/api/create-payment-intent/route",
+      "page": "/api/create-payment-intent/route",
       "matchers": [
         {
-          "regexp": "^/create\\-payment\\-intent$",
-          "originalSource": "/create-payment-intent"
+          "regexp": "^/api/create\\-payment\\-intent$",
+          "originalSource": "/api/create-payment-intent"
         }
       ],
       "wasm": [],
       "assets": [],
       "env": {
-        "__NEXT_BUILD_ID": "f8YGU-m3H4q_21sHpeUwx",
+        "__NEXT_BUILD_ID": "p38w_7paKUZ4bvemum9xU",
         "NEXT_SERVER_ACTIONS_ENCRYPTION_KEY": "fj9TR+E15Q7UqQLclEsZkf1iRq1+IKiP0soCPlCFcOQ=",
-        "__NEXT_PREVIEW_MODE_ID": "cd5158b458bc0abb28a4427533a85d59",
-        "__NEXT_PREVIEW_MODE_ENCRYPTION_KEY": "5e624c43ca64b2684c0d9ed24e510ff018fbdca440e1a33c26532c21e134f317",
-        "__NEXT_PREVIEW_MODE_SIGNING_KEY": "0f7d3708d585de042cbb9cf5b846cbae0be0eb2fd9fdbea436c9396b613faa02"
+        "__NEXT_PREVIEW_MODE_ID": "84e5cbe17f9e3b0e9100f5b92b4c367d",
+        "__NEXT_PREVIEW_MODE_ENCRYPTION_KEY": "3fe2d7730f6e85d0ac34d387029f99b293e6a146a320a46d0cf2bb9a5888a1fb",
+        "__NEXT_PREVIEW_MODE_SIGNING_KEY": "8bc23b56d79239ed304e4b88b0bbf89766bf508fc1f6dcad573ff16849b7d35c"
       }
     },
-    "/(api)/payment-success/route": {
+    "/api/payment-success/route": {
       "files": [
         "server/server-reference-manifest.js",
-        "server/app/(api)/payment-success/route_client-reference-manifest.js",
+        "server/app/api/payment-success/route_client-reference-manifest.js",
         "server/middleware-build-manifest.js",
         "server/middleware-react-loadable-manifest.js",
         "server/next-font-manifest.js",
         "server/interception-route-rewrite-manifest.js",
         "server/edge-runtime-webpack.js",
         "server/edge-chunks/319.js",
-        "server/app/(api)/payment-success/route.js"
+        "server/app/api/payment-success/route.js"
       ],
-      "name": "app/(api)/payment-success/route",
-      "page": "/(api)/payment-success/route",
+      "name": "app/api/payment-success/route",
+      "page": "/api/payment-success/route",
       "matchers": [
         {
-          "regexp": "^/payment\\-success$",
-          "originalSource": "/payment-success"
+          "regexp": "^/api/payment\\-success$",
+          "originalSource": "/api/payment-success"
         }
       ],
       "wasm": [],
       "assets": [],
       "env": {
-        "__NEXT_BUILD_ID": "f8YGU-m3H4q_21sHpeUwx",
+        "__NEXT_BUILD_ID": "p38w_7paKUZ4bvemum9xU",
         "NEXT_SERVER_ACTIONS_ENCRYPTION_KEY": "fj9TR+E15Q7UqQLclEsZkf1iRq1+IKiP0soCPlCFcOQ=",
-        "__NEXT_PREVIEW_MODE_ID": "cd5158b458bc0abb28a4427533a85d59",
-        "__NEXT_PREVIEW_MODE_ENCRYPTION_KEY": "5e624c43ca64b2684c0d9ed24e510ff018fbdca440e1a33c26532c21e134f317",
-        "__NEXT_PREVIEW_MODE_SIGNING_KEY": "0f7d3708d585de042cbb9cf5b846cbae0be0eb2fd9fdbea436c9396b613faa02"
+        "__NEXT_PREVIEW_MODE_ID": "84e5cbe17f9e3b0e9100f5b92b4c367d",
+        "__NEXT_PREVIEW_MODE_ENCRYPTION_KEY": "3fe2d7730f6e85d0ac34d387029f99b293e6a146a320a46d0cf2bb9a5888a1fb",
+        "__NEXT_PREVIEW_MODE_SIGNING_KEY": "8bc23b56d79239ed304e4b88b0bbf89766bf508fc1f6dcad573ff16849b7d35c"
       }
     },
-    "/(api)/reports/[id]/route": {
+    "/api/reports/[id]/route": {
       "files": [
         "server/server-reference-manifest.js",
-        "server/app/(api)/reports/[id]/route_client-reference-manifest.js",
-        "server/middleware-build-manifest.js",
-        "server/middleware-react-loadable-manifest.js",
-        "server/next-font-manifest.js",
-        "server/interception-route-rewrite-manifest.js",
-        "server/edge-runtime-webpack.js",
-        "server/edge-chunks/319.js",
-        "server/edge-chunks/817.js",
-        "server/app/(api)/reports/[id]/route.js"
-      ],
-      "name": "app/(api)/reports/[id]/route",
-      "page": "/(api)/reports/[id]/route",
-      "matchers": [
-        {
-          "regexp": "^/reports/(?<id>[^/]+?)$",
-          "originalSource": "/reports/[id]"
-        }
-      ],
-      "wasm": [],
-      "assets": [],
-      "env": {
-        "__NEXT_BUILD_ID": "f8YGU-m3H4q_21sHpeUwx",
-        "NEXT_SERVER_ACTIONS_ENCRYPTION_KEY": "fj9TR+E15Q7UqQLclEsZkf1iRq1+IKiP0soCPlCFcOQ=",
-        "__NEXT_PREVIEW_MODE_ID": "cd5158b458bc0abb28a4427533a85d59",
-        "__NEXT_PREVIEW_MODE_ENCRYPTION_KEY": "5e624c43ca64b2684c0d9ed24e510ff018fbdca440e1a33c26532c21e134f317",
-        "__NEXT_PREVIEW_MODE_SIGNING_KEY": "0f7d3708d585de042cbb9cf5b846cbae0be0eb2fd9fdbea436c9396b613faa02"
-      }
-    },
-    "/(api)/analyze/route": {
-      "files": [
-        "server/server-reference-manifest.js",
-        "server/app/(api)/analyze/route_client-reference-manifest.js",
+        "server/app/api/reports/[id]/route_client-reference-manifest.js",
         "server/middleware-build-manifest.js",
         "server/middleware-react-loadable-manifest.js",
         "server/next-font-manifest.js",
@@ -104,31 +73,30 @@
         "server/edge-runtime-webpack.js",
         "server/edge-chunks/319.js",
         "server/edge-chunks/817.js",
-        "server/edge-chunks/169.js",
-        "server/app/(api)/analyze/route.js"
+        "server/app/api/reports/[id]/route.js"
       ],
-      "name": "app/(api)/analyze/route",
-      "page": "/(api)/analyze/route",
+      "name": "app/api/reports/[id]/route",
+      "page": "/api/reports/[id]/route",
       "matchers": [
         {
-          "regexp": "^/analyze$",
-          "originalSource": "/analyze"
+          "regexp": "^/api/reports/(?<id>[^/]+?)$",
+          "originalSource": "/api/reports/[id]"
         }
       ],
       "wasm": [],
       "assets": [],
       "env": {
-        "__NEXT_BUILD_ID": "f8YGU-m3H4q_21sHpeUwx",
+        "__NEXT_BUILD_ID": "p38w_7paKUZ4bvemum9xU",
         "NEXT_SERVER_ACTIONS_ENCRYPTION_KEY": "fj9TR+E15Q7UqQLclEsZkf1iRq1+IKiP0soCPlCFcOQ=",
-        "__NEXT_PREVIEW_MODE_ID": "cd5158b458bc0abb28a4427533a85d59",
-        "__NEXT_PREVIEW_MODE_ENCRYPTION_KEY": "5e624c43ca64b2684c0d9ed24e510ff018fbdca440e1a33c26532c21e134f317",
-        "__NEXT_PREVIEW_MODE_SIGNING_KEY": "0f7d3708d585de042cbb9cf5b846cbae0be0eb2fd9fdbea436c9396b613faa02"
+        "__NEXT_PREVIEW_MODE_ID": "84e5cbe17f9e3b0e9100f5b92b4c367d",
+        "__NEXT_PREVIEW_MODE_ENCRYPTION_KEY": "3fe2d7730f6e85d0ac34d387029f99b293e6a146a320a46d0cf2bb9a5888a1fb",
+        "__NEXT_PREVIEW_MODE_SIGNING_KEY": "8bc23b56d79239ed304e4b88b0bbf89766bf508fc1f6dcad573ff16849b7d35c"
       }
     },
-    "/(api)/research/route": {
+    "/api/analyze/route": {
       "files": [
         "server/server-reference-manifest.js",
-        "server/app/(api)/research/route_client-reference-manifest.js",
+        "server/app/api/analyze/route_client-reference-manifest.js",
         "server/middleware-build-manifest.js",
         "server/middleware-react-loadable-manifest.js",
         "server/next-font-manifest.js",
@@ -137,24 +105,56 @@
         "server/edge-chunks/319.js",
         "server/edge-chunks/817.js",
         "server/edge-chunks/169.js",
-        "server/app/(api)/research/route.js"
+        "server/app/api/analyze/route.js"
       ],
-      "name": "app/(api)/research/route",
-      "page": "/(api)/research/route",
+      "name": "app/api/analyze/route",
+      "page": "/api/analyze/route",
       "matchers": [
         {
-          "regexp": "^/research$",
-          "originalSource": "/research"
+          "regexp": "^/api/analyze$",
+          "originalSource": "/api/analyze"
         }
       ],
       "wasm": [],
       "assets": [],
       "env": {
-        "__NEXT_BUILD_ID": "f8YGU-m3H4q_21sHpeUwx",
+        "__NEXT_BUILD_ID": "p38w_7paKUZ4bvemum9xU",
         "NEXT_SERVER_ACTIONS_ENCRYPTION_KEY": "fj9TR+E15Q7UqQLclEsZkf1iRq1+IKiP0soCPlCFcOQ=",
-        "__NEXT_PREVIEW_MODE_ID": "cd5158b458bc0abb28a4427533a85d59",
-        "__NEXT_PREVIEW_MODE_ENCRYPTION_KEY": "5e624c43ca64b2684c0d9ed24e510ff018fbdca440e1a33c26532c21e134f317",
-        "__NEXT_PREVIEW_MODE_SIGNING_KEY": "0f7d3708d585de042cbb9cf5b846cbae0be0eb2fd9fdbea436c9396b613faa02"
+        "__NEXT_PREVIEW_MODE_ID": "84e5cbe17f9e3b0e9100f5b92b4c367d",
+        "__NEXT_PREVIEW_MODE_ENCRYPTION_KEY": "3fe2d7730f6e85d0ac34d387029f99b293e6a146a320a46d0cf2bb9a5888a1fb",
+        "__NEXT_PREVIEW_MODE_SIGNING_KEY": "8bc23b56d79239ed304e4b88b0bbf89766bf508fc1f6dcad573ff16849b7d35c"
+      }
+    },
+    "/api/research/route": {
+      "files": [
+        "server/server-reference-manifest.js",
+        "server/app/api/research/route_client-reference-manifest.js",
+        "server/middleware-build-manifest.js",
+        "server/middleware-react-loadable-manifest.js",
+        "server/next-font-manifest.js",
+        "server/interception-route-rewrite-manifest.js",
+        "server/edge-runtime-webpack.js",
+        "server/edge-chunks/319.js",
+        "server/edge-chunks/817.js",
+        "server/edge-chunks/169.js",
+        "server/app/api/research/route.js"
+      ],
+      "name": "app/api/research/route",
+      "page": "/api/research/route",
+      "matchers": [
+        {
+          "regexp": "^/api/research$",
+          "originalSource": "/api/research"
+        }
+      ],
+      "wasm": [],
+      "assets": [],
+      "env": {
+        "__NEXT_BUILD_ID": "p38w_7paKUZ4bvemum9xU",
+        "NEXT_SERVER_ACTIONS_ENCRYPTION_KEY": "fj9TR+E15Q7UqQLclEsZkf1iRq1+IKiP0soCPlCFcOQ=",
+        "__NEXT_PREVIEW_MODE_ID": "84e5cbe17f9e3b0e9100f5b92b4c367d",
+        "__NEXT_PREVIEW_MODE_ENCRYPTION_KEY": "3fe2d7730f6e85d0ac34d387029f99b293e6a146a320a46d0cf2bb9a5888a1fb",
+        "__NEXT_PREVIEW_MODE_SIGNING_KEY": "8bc23b56d79239ed304e4b88b0bbf89766bf508fc1f6dcad573ff16849b7d35c"
       }
     }
   },
