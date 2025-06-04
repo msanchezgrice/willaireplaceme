@@ -100,64 +100,93 @@ export default function Home() {
             <div className="lg:pl-12">
               {/* Sample Risk Assessment Card */}
               <Card className="bg-white rounded-2xl shadow-2xl border border-slate-200">
-                <CardHeader className="text-center">
-                  <CardTitle className="text-lg">Sample Risk Assessment</CardTitle>
-                  <CardDescription>Product Manager - Tech Industry</CardDescription>
+                <CardHeader className="text-center border-b border-slate-100">
+                  <CardTitle className="text-xl font-bold">Product Manager Risk Assessment</CardTitle>
+                  <CardDescription className="text-base">Risk Score: 65/100 (High-Moderate)</CardDescription>
+                  <div className="flex justify-center mt-4">
+                    <RiskScoreCircle score={65} size={100} />
+                  </div>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Risk Score Display */}
-                  <div className="flex justify-center">
-                    <RiskScoreCircle score={45} size={128} />
+                <CardContent className="space-y-0 p-0">
+                  {/* Task Analysis Table */}
+                  <div className="overflow-hidden">
+                    <div className="bg-slate-50 px-6 py-3 border-b border-slate-200">
+                      <h4 className="font-semibold text-slate-900 text-sm">Task-by-Task AI Impact Analysis</h4>
+                    </div>
+                    
+                    {/* Task Rows */}
+                    <div className="divide-y divide-slate-200">
+                      {/* Spec Writing */}
+                      <div className="px-6 py-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium text-slate-900 text-sm">Spec writing / PRDs</span>
+                          <Badge className="bg-red-100 text-red-800 text-xs">High Risk</Badge>
+                        </div>
+                        <p className="text-xs text-slate-600 leading-relaxed">
+                          Manus.ai and similar GPT-based writers can draft complete PRDs, user stories and acceptance criteria in seconds.
+                          <span className="inline-block bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-xs ml-2">manus.im</span>
+                        </p>
+                      </div>
+
+                      {/* Gap Analysis */}
+                      <div className="px-6 py-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium text-slate-900 text-sm">Gap / requirements analysis</span>
+                          <Badge className="bg-amber-100 text-amber-800 text-xs">Moderate</Badge>
+                        </div>
+                        <p className="text-xs text-slate-600 leading-relaxed">
+                          Atlassian Intelligence surfaces unmet dependencies and recommends backlog items inside Jira.
+                          <span className="inline-block bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-xs ml-2">atlassian.com</span>
+                        </p>
+                      </div>
+
+                      {/* Project Scheduling */}
+                      <div className="px-6 py-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium text-slate-900 text-sm">Project scheduling & ticketing</span>
+                          <Badge className="bg-red-100 text-red-800 text-xs">High Risk</Badge>
+                        </div>
+                        <p className="text-xs text-slate-600 leading-relaxed">
+                          Jira now autogenerates tickets, auto-prioritises them and even fills story points.
+                          <span className="inline-block bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-xs ml-2">atlassian.com</span>
+                        </p>
+                      </div>
+
+                      {/* Wireframes */}
+                      <div className="px-6 py-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium text-slate-900 text-sm">Mock-ups & wireframes</span>
+                          <Badge className="bg-amber-100 text-amber-800 text-xs">Moderate</Badge>
+                        </div>
+                        <p className="text-xs text-slate-600 leading-relaxed">
+                          Figma's "AI designer" & Galileo AI create mid-fidelity wireframes from text prompts.
+                          <span className="inline-block bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-xs ml-2">mckinsey.com</span>
+                        </p>
+                      </div>
+
+                      {/* A/B Testing */}
+                      <div className="px-6 py-4 border-b border-slate-200">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium text-slate-900 text-sm">A/B-test analysis</span>
+                          <Badge className="bg-red-100 text-red-800 text-xs">High Risk</Badge>
+                        </div>
+                        <p className="text-xs text-slate-600 leading-relaxed">
+                          AI tools (Optimizely / VWO) now generate variations and run significance tests end-to-end.
+                          <span className="inline-block bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-xs ml-2">looppanel.com</span>
+                        </p>
+                      </div>
+                    </div>
                   </div>
                   
-                  <div className="text-center">
-                    <Badge variant="secondary" className="bg-amber-100 text-amber-800">
-                      <ChartLine className="w-4 h-4 mr-1" />
-                      Moderate Risk
-                    </Badge>
-                  </div>
-
-                  {/* Risk Breakdown */}
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-slate-600">Task Automation</span>
-                      <div className="flex items-center">
-                        <div className="w-24 bg-slate-200 rounded-full h-2 mr-3">
-                          <div className="bg-red-500 h-2 rounded-full" style={{width: '60%'}}></div>
-                        </div>
-                        <span className="text-sm font-medium">60%</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-slate-600">Decision Making</span>
-                      <div className="flex items-center">
-                        <div className="w-24 bg-slate-200 rounded-full h-2 mr-3">
-                          <div className="bg-amber-500 h-2 rounded-full" style={{width: '40%'}}></div>
-                        </div>
-                        <span className="text-sm font-medium">40%</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-slate-600">Creative Tasks</span>
-                      <div className="flex items-center">
-                        <div className="w-24 bg-slate-200 rounded-full h-2 mr-3">
-                          <div className="bg-green-500 h-2 rounded-full" style={{width: '25%'}}></div>
-                        </div>
-                        <span className="text-sm font-medium">25%</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <Separator />
-                  
-                  <div>
-                    <div className="text-sm text-slate-600 mb-2">
+                  {/* Timeline & CTA */}
+                  <div className="px-6 py-4 bg-slate-50">
+                    <div className="text-sm text-slate-600 mb-3 text-center">
                       <Clock className="w-4 h-4 inline mr-2" />
-                      Estimated Timeline: <span className="font-semibold text-slate-900">3-5 years</span>
+                      Estimated Timeline: <span className="font-semibold text-slate-900">2-4 years</span>
                     </div>
                     <Link href="/assessment">
                       <Button className="w-full">
-                        Get Full Report & Recommendations
+                        Get Your Personalized Analysis
                       </Button>
                     </Link>
                   </div>

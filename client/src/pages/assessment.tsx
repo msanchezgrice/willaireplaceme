@@ -77,7 +77,22 @@ export default function Assessment() {
 
   const submitAssessment = useMutation({
     mutationFn: async (data: AssessmentFormData) => {
-      const response = await apiRequest('POST', '/api/assessments', data);
+      const formData = new FormData();
+      formData.append('data', JSON.stringify(data));
+      if (uploadedFile) {
+        formData.append('resume', uploadedFile);
+      }
+
+      const response = await fetch('/api/assessments', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Assessment submission failed');
+      }
+
       return response.json();
     },
     onSuccess: (data: AssessmentResult) => {
@@ -140,7 +155,7 @@ export default function Assessment() {
     switch (currentStep) {
       case 1: return "Basic Information";
       case 2: return "Work Details"; 
-      case 3: return "Review & Submit";
+      case 3: return "Resume & Review";
       case 4: return "AI Analysis";
       case 5: return "Your Risk Assessment";
       default: return "";
@@ -342,9 +357,26 @@ export default function Assessment() {
               </Form>
             )}
 
-            {/* Step 3: Review & Submit */}
+            {/* Step 3: Resume Upload & Review */}
             {currentStep === 3 && (
               <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Upload Resume (Optional)
+                  </label>
+                  <FileUpload
+                    onFileSelect={setUploadedFile}
+                    accept=".pdf,.doc,.docx"
+                    maxSize={10 * 1024 * 1024}
+                  />
+                  {uploadedFile && (
+                    <div className="mt-2 flex items-center text-sm text-slate-600">
+                      <FileText className="w-4 h-4 mr-2" />
+                      {uploadedFile.name}
+                    </div>
+                  )}
+                </div>
+
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
                   <h4 className="font-semibold text-slate-900 mb-3">Ready for AI Analysis</h4>
                   <ul className="space-y-2 text-sm text-slate-700">
@@ -369,6 +401,7 @@ export default function Assessment() {
                     <div><strong>Role:</strong> {form.watch('jobTitle')} ({form.watch('careerCategory')})</div>
                     <div><strong>Experience:</strong> {form.watch('yearsExperience')} years</div>
                     <div><strong>Company Size:</strong> {form.watch('companySize') || 'Not specified'}</div>
+                    <div><strong>Resume:</strong> {uploadedFile ? 'Uploaded' : 'Not provided'}</div>
                   </div>
                 </div>
               </div>
