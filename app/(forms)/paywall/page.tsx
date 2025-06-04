@@ -75,7 +75,7 @@ export default function Paywall() {
           <CardContent className="space-y-8">
             {/* Features List */}
             <div className="space-y-6">
-              <h3 className="font-semibold text-lg text-slate-900">What's included in your full report:</h3>
+              <h3 className="font-semibold text-lg text-slate-900">What&apos;s included in your full report:</h3>
               <div className="space-y-4">
                 {[
                   "Detailed task-by-task AI impact analysis",

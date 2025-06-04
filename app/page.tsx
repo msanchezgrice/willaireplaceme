@@ -180,7 +180,7 @@ export default function Home() {
                       {/* Project Scheduling */}
                       <div className="px-6 py-4">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium text-slate-900 text-sm">Project scheduling & ticketing</span>
+                          <span className="font-medium text-slate-900 text-sm">Project scheduling &amp; ticketing</span>
                           <Badge className="bg-red-100 text-red-800 text-xs">High Risk</Badge>
                         </div>
                         <p className="text-xs text-slate-600 leading-relaxed">
@@ -192,11 +192,11 @@ export default function Home() {
                       {/* Wireframes */}
                       <div className="px-6 py-4">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium text-slate-900 text-sm">Mock-ups & wireframes</span>
+                          <span className="font-medium text-slate-900 text-sm">Mock-ups &amp; wireframes</span>
                           <Badge className="bg-amber-100 text-amber-800 text-xs">Moderate</Badge>
                         </div>
                         <p className="text-xs text-slate-600 leading-relaxed">
-                          Figma's "AI designer" & Galileo AI create mid-fidelity wireframes from text prompts.
+                          Figma&apos;s &quot;AI designer&quot; &amp; Galileo AI create mid-fidelity wireframes from text prompts.
                           <span className="inline-block bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-xs ml-2">mckinsey.com</span>
                         </p>
                       </div>
@@ -342,7 +342,7 @@ export default function Home() {
                       <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
                     ))}
                   </div>
-                  <p className="text-slate-700 mb-4">"{testimonial.content}"</p>
+                  <p className="text-slate-700 mb-4">&quot;{testimonial.content}&quot;</p>
                   <div className="flex items-center">
                     <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold mr-4">
                       {testimonial.name.split(' ').map(n => n[0]).join('')}
@@ -405,7 +405,7 @@ export default function Home() {
               <CardHeader className="text-center">
                 <CardTitle className="text-2xl">Full Report</CardTitle>
                 <div className="text-4xl font-bold text-slate-900 my-2">$49</div>
-                <CardDescription>Comprehensive analysis & recommendations</CardDescription>
+                <CardDescription>Comprehensive analysis &amp; recommendations</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <ul className="space-y-4">
@@ -446,7 +446,7 @@ export default function Home() {
       <section className="py-20 bg-gradient-to-r from-primary to-blue-700">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl lg:text-4xl font-bold text-white mb-6">
-            Don't Wait for AI to Disrupt Your Career
+            Don&apos;t Wait for AI to Disrupt Your Career
           </h2>
           <p className="text-xl text-blue-100 mb-8 leading-relaxed">
             Take control of your professional future today. Get personalized insights and actionable strategies to stay ahead of AI automation in your industry.
