@@ -140,7 +140,7 @@ export default function Assessment() {
     switch (currentStep) {
       case 1: return "Basic Information";
       case 2: return "Work Details"; 
-      case 3: return "Resume & Skills";
+      case 3: return "Review & Submit";
       case 4: return "AI Analysis";
       case 5: return "Your Risk Assessment";
       default: return "";
@@ -342,32 +342,15 @@ export default function Assessment() {
               </Form>
             )}
 
-            {/* Step 3: Resume Upload */}
+            {/* Step 3: Review & Submit */}
             {currentStep === 3 && (
               <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Upload Resume (Optional)
-                  </label>
-                  <FileUpload
-                    onFileSelect={setUploadedFile}
-                    accept=".pdf,.doc,.docx"
-                    maxSize={10 * 1024 * 1024}
-                  />
-                  {uploadedFile && (
-                    <div className="mt-2 flex items-center text-sm text-slate-600">
-                      <FileText className="w-4 h-4 mr-2" />
-                      {uploadedFile.name}
-                    </div>
-                  )}
-                </div>
-
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                  <h4 className="font-semibold text-slate-900 mb-3">What happens next?</h4>
+                  <h4 className="font-semibold text-slate-900 mb-3">Ready for AI Analysis</h4>
                   <ul className="space-y-2 text-sm text-slate-700">
                     <li className="flex items-start">
                       <Bot className="w-4 h-4 text-primary mr-2 mt-0.5 flex-shrink-0" />
-                      <span>GPT-4 will analyze your profile and research AI developments in your field</span>
+                      <span>Our AI will analyze your profile and research current developments in your field</span>
                     </li>
                     <li className="flex items-start">
                       <Clock className="w-4 h-4 text-primary mr-2 mt-0.5 flex-shrink-0" />
@@ -378,6 +361,15 @@ export default function Assessment() {
                       <span>Your data is processed securely and not stored permanently</span>
                     </li>
                   </ul>
+                </div>
+
+                <div className="bg-slate-50 rounded-lg p-6">
+                  <h4 className="font-semibold text-slate-900 mb-3">Review Your Information</h4>
+                  <div className="space-y-2 text-sm">
+                    <div><strong>Role:</strong> {form.watch('jobTitle')} ({form.watch('careerCategory')})</div>
+                    <div><strong>Experience:</strong> {form.watch('yearsExperience')} years</div>
+                    <div><strong>Company Size:</strong> {form.watch('companySize') || 'Not specified'}</div>
+                  </div>
                 </div>
               </div>
             )}

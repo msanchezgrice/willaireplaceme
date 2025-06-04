@@ -164,7 +164,7 @@ export default function Checkout() {
   });
 
   useEffect(() => {
-    if (!assessment || assessment.hasFullReport || paymentSucceeded) {
+    if (!assessment || assessment.hasFullReport || paymentSucceeded || !stripePromise) {
       return;
     }
 
@@ -175,9 +175,10 @@ export default function Checkout() {
         setClientSecret(data.clientSecret);
       })
       .catch((error) => {
+        console.error('Payment setup error:', error);
         toast({
           title: "Payment Setup Error",
-          description: "Unable to initialize payment. Please try again.",
+          description: "Payment processing is not configured. Please contact support.",
           variant: "destructive",
         });
       });
