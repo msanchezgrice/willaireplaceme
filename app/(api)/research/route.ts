@@ -21,9 +21,8 @@ export async function POST(req: NextRequest) {
 
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   const research = await openai.chat.completions.create({
-    model: 'gpt-4o-browsing',
+    model: 'gpt-4o',
     temperature: 0.2,
-    tools: [{ type: 'browser' }],
     messages: [{ role: 'system', content: researchPrompt({ role, tasks, resume }) }]
   });
 

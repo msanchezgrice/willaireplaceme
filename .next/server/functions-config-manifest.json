@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "functions": {
+    "/analyze": {},
+    "/create-payment-intent": {},
+    "/payment-success": {},
+    "/research": {},
+    "/reports/[id]": {}
+  }
+}

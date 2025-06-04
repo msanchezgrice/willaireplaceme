@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, ArrowLeft, CreditCard, Shield } from "lucide-react";
 
-export default function Paywall() {
+function PaywallContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const assessmentId = searchParams.get('id');
@@ -141,5 +141,13 @@ export default function Paywall() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function Paywall() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PaywallContent />
+    </Suspense>
   );
 } 
