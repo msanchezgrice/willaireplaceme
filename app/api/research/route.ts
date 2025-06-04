@@ -99,36 +99,6 @@ If you cannot access the profile or extract information, return {"error": "Unabl
   }
 }
 
-// Function to trigger analysis asynchronously (fire-and-forget)
-async function triggerAnalysisAsync(profileId: string, evidence: any) {
-  console.log('🔥 [Research API] Starting async analysis trigger...');
-  
-  // Don't await this - let it run in background
-  setTimeout(async () => {
-    try {
-      const analysisUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/api/analyze`;
-      console.log('🎯 [Research API] Analysis URL:', analysisUrl);
-      
-      const response = await fetch(analysisUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ profile_id: profileId, evidence })
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ [Research API] Analysis failed:', response.status, errorText);
-        throw new Error(`Analysis failed: ${response.status} ${errorText}`);
-      }
-
-      const result = await response.json();
-      console.log('✅ [Research API] Analysis triggered successfully:', result);
-    } catch (error) {
-      console.error('💥 [Research API] Background analysis error:', error);
-    }
-  }, 100); // Small delay to let response return first
-}
-
 export async function POST(req: NextRequest) {
   console.log('🔍 [Research API] Starting request...');
   
@@ -162,7 +132,7 @@ export async function POST(req: NextRequest) {
     console.log('🤖 [Research API] Creating OpenAI client...');
     const openai = new OpenAI({ 
       apiKey: process.env.OPENAI_API_KEY,
-      timeout: 20000 // Reduced timeout for faster response
+      timeout: 15000 // Shorter timeout for faster response
     });
 
     // LinkedIn Profile Analysis (with timeout)
@@ -173,7 +143,7 @@ export async function POST(req: NextRequest) {
         linkedinData = await Promise.race([
           analyzeLinkedInProfile(openai, linkedinUrl.trim()),
           new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('LinkedIn analysis timeout')), 15000)
+            setTimeout(() => reject(new Error('LinkedIn analysis timeout')), 10000)
           )
         ]);
         
@@ -220,13 +190,12 @@ export async function POST(req: NextRequest) {
 
     console.log('✅ [Research API] Profile created:', profile);
 
-    // Return profile_id immediately, then continue processing in background
-    console.log('⚡ [Research API] Returning profile_id immediately for fast response');
+    // Do the AI research and analysis immediately but don't wait for completion
+    console.log('📝 [Research API] Starting AI research and analysis...');
     
-    // Start background processing
-    setTimeout(async () => {
+    const processAnalysis = async () => {
       try {
-        console.log('📝 [Research API] Starting background AI research...');
+        console.log('📝 [Research API] Generating research prompt...');
         const prompt = researchPrompt({ 
           role: sanitizedRole, 
           tasks, 
@@ -270,15 +239,36 @@ export async function POST(req: NextRequest) {
           return;
         }
 
-        console.log('🔥 [Research API] Triggering analysis async...');
-        // Trigger analysis without awaiting
-        triggerAnalysisAsync(profile.id, evidence);
-        console.log('✅ [Research API] Background processing completed');
+        console.log('🔥 [Research API] Calling analyze API directly...');
+        // Call analyze API directly instead of using fetch
+        const analysisUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/api/analyze`;
+        console.log('🎯 [Research API] Analysis URL:', analysisUrl);
         
-      } catch (backgroundError) {
-        console.error('💥 [Research API] Background processing error:', backgroundError);
+        const analysisResponse = await fetch(analysisUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ profile_id: profile.id, evidence }),
+          signal: AbortSignal.timeout(30000) // 30 second timeout
+        });
+
+        if (!analysisResponse.ok) {
+          const errorText = await analysisResponse.text();
+          console.error('❌ [Research API] Analysis failed:', analysisResponse.status, errorText);
+          return;
+        }
+
+        const result = await analysisResponse.json();
+        console.log('✅ [Research API] Analysis completed successfully:', result);
+        
+      } catch (analysisError) {
+        console.error('💥 [Research API] Analysis processing error:', analysisError);
       }
-    }, 100);
+    };
+
+    // Start analysis but don't wait for it - return profile_id immediately
+    processAnalysis().catch(error => {
+      console.error('💥 [Research API] Background analysis failed:', error);
+    });
 
     console.log('✅ [Research API] Request completed successfully');
     return NextResponse.json({ 
