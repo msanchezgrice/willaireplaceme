@@ -1,27 +1,49 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
-import { Providers } from "./providers";
+import { ClerkProvider } from '@clerk/nextjs';
 
-const inter = Inter({ subsets: ["latin"] });
+const geistSans = localFont({
+  src: "./fonts/GeistVF.woff2",
+  variable: "--font-geist-sans",
+  weight: "100 900",
+});
+const geistMono = localFont({
+  src: "./fonts/GeistMonoVF.woff2",
+  variable: "--font-geist-mono",
+  weight: "100 900",
+});
 
 export const metadata: Metadata = {
-  title: "AICareerShield - AI Replacement Risk Assessment",
-  description: "Discover your likelihood of being replaced by AI and get personalized strategies to future-proof your career.",
+  title: "AICareerShield - Will AI Replace Your Career?",
+  description: "Get your AI replacement risk assessment with personalized strategies to future-proof your career",
 };
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        <Providers>
-          <main>{children}</main>
-        </Providers>
-      </body>
-    </html>
+    <ClerkProvider
+      publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+      appearance={{
+        elements: {
+          formButtonPrimary: 'bg-primary hover:bg-primary/90 text-primary-foreground',
+          socialButtonsBlockButton: 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50',
+          socialButtonsBlockButtonText: 'font-medium',
+          formFieldInput: 'border border-slate-300 rounded-md',
+          footerActionLink: 'text-primary hover:text-primary/90'
+        }
+      }}
+    >
+      <html lang="en">
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        >
+          {children}
+        </body>
+      </html>
+    </ClerkProvider>
   );
 } 

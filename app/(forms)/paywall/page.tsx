@@ -2,50 +2,60 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, ArrowLeft, CreditCard, Shield } from "lucide-react";
+import { CheckCircle, ArrowLeft, Shield, Mail, User } from "lucide-react";
 
 function PaywallContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { isSignedIn, user, isLoaded } = useUser();
   const assessmentId = searchParams.get('id');
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handlePurchase = async () => {
-    if (!assessmentId) return;
-    
-    setIsLoading(true);
-    try {
-      const response = await fetch('/api/create-payment-intent', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ assessmentId })
-      });
-
-      if (!response.ok) {
-        throw new Error('Payment setup failed');
-      }
-
-      const { clientSecret } = await response.json();
-      
-      // In a real implementation, you'd integrate with Stripe Elements here
-      // For now, simulate payment success
-      setTimeout(() => {
-        fetch('/api/payment-success', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ paymentIntentId: 'pi_mock_success' })
-        });
-        
-        // Redirect to full report
-        router.push(`/report?id=${assessmentId}&paid=true`);
-      }, 2000);
-      
-    } catch (error) {
-      console.error('Payment failed:', error);
-      setIsLoading(false);
+  useEffect(() => {
+    // If user is already signed in, redirect to full report
+    if (isSignedIn && assessmentId) {
+      router.push(`/report?id=${assessmentId}&paid=true`);
     }
+  }, [isSignedIn, assessmentId, router]);
+
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+
+  if (isSignedIn) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="max-w-md mx-auto text-center">
+          <CardContent className="p-8">
+            <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold mb-2">Welcome back!</h2>
+            <p className="text-slate-600 mb-4">Redirecting you to your full report...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const handleSignUp = () => {
+    // Store the report ID for after signup
+    if (assessmentId) {
+      sessionStorage.setItem('pendingReportId', assessmentId);
+    }
+    router.push('/sign-up');
+  };
+
+  const handleSignIn = () => {
+    // Store the report ID for after signin
+    if (assessmentId) {
+      sessionStorage.setItem('pendingReportId', assessmentId);
+    }
+    router.push('/sign-in');
   };
 
   return (
@@ -68,7 +78,7 @@ function PaywallContent() {
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">Unlock Your Complete Analysis</CardTitle>
             <CardDescription className="text-lg">
-              Get detailed insights, personalized recommendations, and actionable strategies
+              Sign up with your email to get detailed insights, personalized recommendations, and actionable strategies
             </CardDescription>
           </CardHeader>
 
@@ -94,47 +104,47 @@ function PaywallContent() {
               </div>
             </div>
 
-            {/* Pricing */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
-              <div className="text-3xl font-bold text-slate-900 mb-2">$49</div>
-              <div className="text-slate-600">One-time payment • Instant access</div>
-            </div>
+            {/* Auth Section */}
+            <div className="space-y-6">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
+                <div className="text-3xl font-bold text-slate-900 mb-2">Free</div>
+                <div className="text-slate-600">Just sign up with your email • Instant access</div>
+              </div>
 
-            {/* Action Buttons */}
-            <div className="space-y-4">
-              <Button 
-                onClick={handlePurchase} 
-                className="w-full h-12 text-lg shadow-lg"
-                disabled={isLoading || !assessmentId}
-              >
-                {isLoading ? (
-                  <div className="flex items-center">
-                    <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
-                    Processing...
-                  </div>
-                ) : (
-                  <>
-                    <CreditCard className="w-5 h-5 mr-2" />
-                    Get Complete Report Now
-                  </>
-                )}
-              </Button>
+              <div className="space-y-4">
+                <Button 
+                  onClick={handleSignUp} 
+                  className="w-full h-12 text-lg shadow-lg"
+                >
+                  <Mail className="w-5 h-5 mr-2" />
+                  Sign Up for Complete Report
+                </Button>
 
-              <Button 
-                variant="outline" 
-                onClick={() => router.push('/')}
-                className="w-full"
-                disabled={isLoading}
-              >
-                Maybe Later
-              </Button>
+                <div className="text-center text-sm text-slate-600">
+                  Already have an account?{" "}
+                  <button 
+                    onClick={handleSignIn}
+                    className="text-primary hover:text-primary/90 font-medium"
+                  >
+                    Sign in here
+                  </button>
+                </div>
+
+                <Button 
+                  variant="outline" 
+                  onClick={() => router.push('/')}
+                  className="w-full"
+                >
+                  Maybe Later
+                </Button>
+              </div>
             </div>
 
             {/* Security Note */}
             <div className="text-center text-sm text-slate-600">
               <div className="flex items-center justify-center">
                 <Shield className="w-4 h-4 mr-2 text-green-600" />
-                <span>Secure payment • 30-day money-back guarantee</span>
+                <span>Secure signup • No spam ever • Unsubscribe anytime</span>
               </div>
             </div>
           </CardContent>
@@ -146,7 +156,11 @@ function PaywallContent() {
 
 export default function Paywall() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    }>
       <PaywallContent />
     </Suspense>
   );

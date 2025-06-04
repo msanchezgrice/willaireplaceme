@@ -23,7 +23,10 @@ import {
   Shield, 
   AlertTriangle,
   FileText,
-  CreditCard
+  CreditCard,
+  Upload,
+  Linkedin,
+  Link
 } from "lucide-react";
 
 const assessmentSchema = z.object({
@@ -33,6 +36,7 @@ const assessmentSchema = z.object({
   companySize: z.string().optional(),
   dailyWorkSummary: z.string().min(50, "Please provide at least 50 characters describing your daily work"),
   keySkills: z.string().optional(),
+  linkedinUrl: z.string().optional(),
 });
 
 type AssessmentFormData = z.infer<typeof assessmentSchema>;
@@ -59,6 +63,7 @@ export default function Intake() {
   const [analysisStep, setAnalysisStep] = useState(0);
   const [result, setResult] = useState<AssessmentResult | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   const form = useForm<AssessmentFormData>({
     resolver: zodResolver(assessmentSchema),
@@ -69,6 +74,7 @@ export default function Intake() {
       companySize: "",
       dailyWorkSummary: "",
       keySkills: "",
+      linkedinUrl: "",
     },
   });
 
@@ -103,6 +109,7 @@ export default function Intake() {
       };
 
       console.log('📄 [Frontend] Uploaded file:', uploadedFile?.name, uploadedFile?.type);
+      console.log('🔗 [Frontend] LinkedIn URL:', data.linkedinUrl);
 
       let resumeContent = data.dailyWorkSummary;
       if (uploadedFile) {
@@ -120,14 +127,22 @@ export default function Intake() {
       const requestBody = {
         role: data.jobTitle,
         tasks: taskHours,
-        resume: resumeContent
+        resume: resumeContent,
+        linkedinUrl: data.linkedinUrl || null,
+        profileData: {
+          careerCategory: data.careerCategory,
+          yearsExperience: data.yearsExperience,
+          companySize: data.companySize,
+          keySkills: data.keySkills
+        }
       };
       
       console.log('📤 [Frontend] Sending request to /api/research');
       console.log('📋 [Frontend] Request body:', {
         role: requestBody.role,
         tasks: requestBody.tasks,
-        resume_length: requestBody.resume.length
+        resume_length: requestBody.resume.length,
+        hasLinkedin: !!requestBody.linkedinUrl
       });
 
       const response = await fetch('/api/research', {
@@ -202,6 +217,35 @@ export default function Intake() {
     }
   };
 
+  const handleFileUpload = (files: FileList | null) => {
+    if (files && files[0]) {
+      const file = files[0];
+      const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
+      
+      if (validTypes.includes(file.type) || file.name.endsWith('.pdf') || file.name.endsWith('.doc') || file.name.endsWith('.docx') || file.name.endsWith('.txt')) {
+        setUploadedFile(file);
+      } else {
+        alert('Please upload a PDF, DOC, DOCX, or TXT file');
+      }
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    handleFileUpload(e.dataTransfer.files);
+  };
+
   const nextStep = () => {
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
@@ -259,11 +303,11 @@ export default function Intake() {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <Card className="shadow-xl">
           <CardHeader>
             <div className="flex justify-between items-center mb-4">
-              <CardTitle className="text-2xl">{getStepTitle()}</CardTitle>
+              <CardTitle className="text-xl sm:text-2xl">{getStepTitle()}</CardTitle>
               <div className="flex space-x-2">
                 {[1, 2, 3, 4, 5].map((step) => (
                   <div
@@ -418,6 +462,29 @@ export default function Intake() {
                       </FormItem>
                     )}
                   />
+
+                  <FormField
+                    control={form.control}
+                    name="linkedinUrl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center">
+                          <Linkedin className="w-4 h-4 mr-2 text-blue-600" />
+                          LinkedIn Profile URL (Optional)
+                        </FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="https://linkedin.com/in/your-profile" 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <p className="text-sm text-slate-500">
+                          Our AI will analyze your LinkedIn profile for more comprehensive assessment
+                        </p>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </form>
               </Form>
             )}
@@ -426,21 +493,70 @@ export default function Intake() {
             {currentStep === 3 && (
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-4">
                     Upload Resume (Optional)
                   </label>
-                  <input
-                    type="file"
-                    accept=".pdf,.doc,.docx,.txt"
-                    onChange={(e) => setUploadedFile(e.target.files?.[0] || null)}
-                    className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                  />
-                  {uploadedFile && (
-                    <div className="mt-2 flex items-center text-sm text-slate-600">
-                      <FileText className="w-4 h-4 mr-2" />
-                      {uploadedFile.name}
-                    </div>
-                  )}
+                  
+                  {/* Enhanced File Upload Area */}
+                  <div
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    className={`border-2 border-dashed rounded-lg p-8 sm:p-12 text-center transition-colors ${
+                      isDragOver 
+                        ? 'border-primary bg-blue-50' 
+                        : uploadedFile 
+                        ? 'border-green-500 bg-green-50' 
+                        : 'border-slate-300 hover:border-slate-400'
+                    }`}
+                  >
+                    {uploadedFile ? (
+                      <div className="space-y-4">
+                        <div className="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center">
+                          <FileText className="w-8 h-8 text-green-600" />
+                        </div>
+                        <div>
+                          <p className="text-green-700 font-medium">{uploadedFile.name}</p>
+                          <p className="text-sm text-green-600">File uploaded successfully</p>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => setUploadedFile(null)}
+                        >
+                          Remove File
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="w-16 h-16 mx-auto bg-slate-100 rounded-full flex items-center justify-center">
+                          <Upload className="w-8 h-8 text-slate-400" />
+                        </div>
+                        <div>
+                          <p className="text-slate-600 font-medium">Drop your resume here</p>
+                          <p className="text-sm text-slate-500">or click to browse files</p>
+                        </div>
+                        <input
+                          type="file"
+                          accept=".pdf,.doc,.docx,.txt"
+                          onChange={(e) => handleFileUpload(e.target.files)}
+                          className="hidden"
+                          id="file-upload"
+                        />
+                        <label htmlFor="file-upload">
+                          <Button variant="outline" size="sm" asChild>
+                            <span className="cursor-pointer">
+                              <Upload className="w-4 h-4 mr-2" />
+                              Choose File
+                            </span>
+                          </Button>
+                        </label>
+                        <p className="text-xs text-slate-400">
+                          Supports PDF, DOC, DOCX, TXT (max 10MB)
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
@@ -458,6 +574,12 @@ export default function Intake() {
                       <Shield className="w-4 h-4 text-primary mr-2 mt-0.5 flex-shrink-0" />
                       <span>Your data is processed securely and not stored permanently</span>
                     </li>
+                    {form.watch('linkedinUrl') && (
+                      <li className="flex items-start">
+                        <Linkedin className="w-4 h-4 text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
+                        <span>LinkedIn profile will be analyzed for comprehensive assessment</span>
+                      </li>
+                    )}
                   </ul>
                 </div>
 
@@ -468,6 +590,7 @@ export default function Intake() {
                     <div><strong>Experience:</strong> {form.watch('yearsExperience')} years</div>
                     <div><strong>Company Size:</strong> {form.watch('companySize') || 'Not specified'}</div>
                     <div><strong>Resume:</strong> {uploadedFile ? 'Uploaded' : 'Not provided'}</div>
+                    <div><strong>LinkedIn:</strong> {form.watch('linkedinUrl') ? 'Provided' : 'Not provided'}</div>
                   </div>
                 </div>
               </div>
@@ -527,42 +650,46 @@ export default function Intake() {
                       <span>Estimated timeline: {result.timeline}</span>
                     </div>
                     {result.previewRecommendations && (
-                      <p className="text-slate-600 mt-3">{result.previewRecommendations}</p>
+                      <div className="mt-4 prose prose-sm max-w-none">
+                        <div dangerouslySetInnerHTML={{ 
+                          __html: result.previewRecommendations.replace(/\n/g, '<br/>') 
+                        }} />
+                      </div>
                     )}
                   </div>
                 </div>
 
-                {/* Upgrade CTA */}
+                {/* Email Signup CTA */}
                 {!result.hasFullReport && (
                   <Card className="border-2 border-primary">
                     <CardHeader className="text-center">
                       <CardTitle className="text-lg">Get Your Complete Report</CardTitle>
                       <CardDescription>
-                        Unlock detailed analysis, specific recommendations, and your personalized action plan.
+                        Sign up with your email to unlock detailed analysis, specific recommendations, and your personalized action plan.
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="text-center space-y-4">
-                      <div className="flex items-center justify-center space-x-6 text-sm text-slate-600">
-                        <div className="flex items-center">
-                          <CheckCircle className="w-4 h-4 text-green-600 mr-1" />
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-slate-600">
+                        <div className="flex items-center justify-center">
+                          <CheckCircle className="w-4 h-4 text-green-600 mr-2" />
                           Detailed timeline
                         </div>
-                        <div className="flex items-center">
-                          <CheckCircle className="w-4 h-4 text-green-600 mr-1" />
+                        <div className="flex items-center justify-center">
+                          <CheckCircle className="w-4 h-4 text-green-600 mr-2" />
                           Action plan
                         </div>
-                        <div className="flex items-center">
-                          <CheckCircle className="w-4 h-4 text-green-600 mr-1" />
+                        <div className="flex items-center justify-center">
+                          <CheckCircle className="w-4 h-4 text-green-600 mr-2" />
                           Skill recommendations
                         </div>
                       </div>
-                      <div className="flex space-x-4">
+                      <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
                         <Button variant="outline" className="flex-1" onClick={() => router.push('/')}>
                           Maybe Later
                         </Button>
                         <Button className="flex-1" onClick={() => router.push(`/paywall?id=${result.id}`)}>
                           <CreditCard className="w-4 h-4 mr-2" />
-                          Get Full Report - $49
+                          Sign Up for Full Report
                         </Button>
                       </div>
                     </CardContent>
@@ -573,16 +700,17 @@ export default function Intake() {
 
             {/* Navigation */}
             {currentStep < 4 && (
-              <div className="flex justify-between pt-6">
+              <div className="flex flex-col sm:flex-row justify-between pt-6 space-y-2 sm:space-y-0">
                 <Button
                   variant="outline"
                   onClick={previousStep}
                   disabled={currentStep === 1}
+                  className="w-full sm:w-auto"
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Back
                 </Button>
-                <Button onClick={nextStep}>
+                <Button onClick={nextStep} className="w-full sm:w-auto">
                   {currentStep === 3 ? (
                     <>
                       <Bot className="w-4 h-4 mr-2" />

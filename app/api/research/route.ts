@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import OpenAI from 'openai';
-import { researchPrompt } from '@/server/promptTemplates';
+import { researchPrompt, linkedinPrompt } from '@/server/promptTemplates';
 
 export const runtime = 'edge';
 
@@ -24,6 +24,79 @@ function sanitizeText(text: string): string {
     })
     // Limit length to prevent oversized content
     .substring(0, 50000);
+}
+
+// Function to analyze LinkedIn profile using web browsing
+async function analyzeLinkedInProfile(openai: OpenAI, linkedinUrl: string): Promise<any> {
+  console.log('🔗 [Research API] Analyzing LinkedIn profile:', linkedinUrl);
+  
+  try {
+    // Use GPT-4 with web browsing to analyze LinkedIn profile
+    const linkedinAnalysis = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      temperature: 0.1,
+      messages: [
+        {
+          role: 'system',
+          content: `You are a professional profile analyzer. I will give you a LinkedIn URL and you need to extract professional information from it. 
+
+Extract the following information:
+- Current job title and company
+- Years of experience (estimate from career progression)
+- Key skills and technologies
+- Daily responsibilities (infer from job titles and descriptions)
+- Industry and functional area
+- Education background
+- Career progression pattern
+
+Return the information in a structured JSON format like this:
+{
+  "currentTitle": "job title",
+  "company": "company name",
+  "yearsExperience": "estimated years",
+  "skills": ["skill1", "skill2"],
+  "dailyTasks": "inferred daily responsibilities",
+  "industry": "industry sector",
+  "education": "education background",
+  "careerProgression": "career trajectory analysis"
+}
+
+If you cannot access the profile or extract information, return {"error": "Unable to analyze profile", "reason": "explanation"}.`
+        },
+        {
+          role: 'user',
+          content: `Please analyze this LinkedIn profile and extract professional information: ${linkedinUrl}`
+        }
+      ]
+    });
+
+    const responseContent = linkedinAnalysis.choices[0].message.content;
+    if (!responseContent) {
+      throw new Error('Empty response from LinkedIn analysis');
+    }
+
+    try {
+      const profileData = JSON.parse(responseContent);
+      console.log('✅ [Research API] LinkedIn profile analyzed successfully');
+      return profileData;
+    } catch (parseError) {
+      console.error('❌ [Research API] Failed to parse LinkedIn analysis:', parseError);
+      console.log('📄 [Research API] Raw response:', responseContent);
+      
+      // Return the raw text if JSON parsing fails
+      return {
+        error: false,
+        rawAnalysis: responseContent,
+        extractedInfo: "LinkedIn profile analysis completed but in text format"
+      };
+    }
+  } catch (error) {
+    console.error('❌ [Research API] LinkedIn analysis failed:', error);
+    return {
+      error: true,
+      reason: error instanceof Error ? error.message : 'Unknown error during LinkedIn analysis'
+    };
+  }
 }
 
 // Function to trigger analysis directly (instead of fire-and-forget)
@@ -62,7 +135,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     console.log('📋 [Research API] Request body:', JSON.stringify(body, null, 2));
     
-    const { role, tasks, resume } = body;
+    const { role, tasks, resume, linkedinUrl, profileData } = body;
 
     // Validate required fields
     if (!role) {
@@ -72,10 +145,11 @@ export async function POST(req: NextRequest) {
 
     // Sanitize text inputs
     const sanitizedRole = sanitizeText(role);
-    const sanitizedResume = sanitizeText(resume || '');
+    let sanitizedResume = sanitizeText(resume || '');
     
     console.log('🧹 [Research API] Text sanitization complete');
     console.log('📏 [Research API] Sanitized resume length:', sanitizedResume.length);
+    console.log('🔗 [Research API] LinkedIn URL provided:', !!linkedinUrl);
 
     console.log('🔗 [Research API] Creating Supabase client...');
     const supabase = createClient(
@@ -83,6 +157,38 @@ export async function POST(req: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
     console.log('✅ [Research API] Supabase client created');
+
+    console.log('🤖 [Research API] Creating OpenAI client...');
+    const openai = new OpenAI({ 
+      apiKey: process.env.OPENAI_API_KEY,
+      timeout: 30000 // 30 second timeout
+    });
+
+    // LinkedIn Profile Analysis
+    let linkedinData = null;
+    if (linkedinUrl && linkedinUrl.trim()) {
+      console.log('🔗 [Research API] Processing LinkedIn profile...');
+      linkedinData = await analyzeLinkedInProfile(openai, linkedinUrl.trim());
+      
+      if (linkedinData && !linkedinData.error) {
+        console.log('✅ [Research API] LinkedIn data extracted successfully');
+        
+        // Enhance resume content with LinkedIn data
+        if (linkedinData.dailyTasks) {
+          sanitizedResume += `\n\nLinkedIn Profile Insights:\n${linkedinData.dailyTasks}`;
+        }
+        if (linkedinData.skills && Array.isArray(linkedinData.skills)) {
+          sanitizedResume += `\n\nKey Skills: ${linkedinData.skills.join(', ')}`;
+        }
+        if (linkedinData.careerProgression) {
+          sanitizedResume += `\n\nCareer Progression: ${linkedinData.careerProgression}`;
+        }
+        
+        console.log('📏 [Research API] Enhanced resume length after LinkedIn:', sanitizedResume.length);
+      } else {
+        console.log('⚠️ [Research API] LinkedIn analysis failed, continuing without LinkedIn data');
+      }
+    }
 
     console.log('💾 [Research API] Inserting profile into database...');
     const { data: profile, error: dbError } = await supabase
@@ -103,14 +209,14 @@ export async function POST(req: NextRequest) {
 
     console.log('✅ [Research API] Profile created:', profile);
 
-    console.log('🤖 [Research API] Creating OpenAI client...');
-    const openai = new OpenAI({ 
-      apiKey: process.env.OPENAI_API_KEY,
-      timeout: 30000 // 30 second timeout
-    });
-
     console.log('📝 [Research API] Generating research prompt...');
-    const prompt = researchPrompt({ role: sanitizedRole, tasks, resume: sanitizedResume });
+    const prompt = researchPrompt({ 
+      role: sanitizedRole, 
+      tasks, 
+      resume: sanitizedResume,
+      linkedinData: linkedinData || null,
+      profileData: profileData || null
+    });
     console.log('📄 [Research API] Prompt length:', prompt.length);
 
     console.log('🚀 [Research API] Calling OpenAI API...');
@@ -136,6 +242,11 @@ export async function POST(req: NextRequest) {
     try {
       evidence = JSON.parse(responseContent);
       console.log('✅ [Research API] JSON parsed successfully');
+      
+      // Add LinkedIn data to evidence if available
+      if (linkedinData && !linkedinData.error) {
+        evidence.linkedinProfile = linkedinData;
+      }
     } catch (parseError) {
       console.error('❌ [Research API] JSON parse error:', parseError);
       console.log('📄 [Research API] Raw content that failed to parse:', responseContent);
