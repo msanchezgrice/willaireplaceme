@@ -145,29 +145,69 @@ export default function Intake() {
         hasLinkedin: !!requestBody.linkedinUrl
       });
 
-      const response = await fetch('/api/research', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody)
-      });
+      // Add timeout to the fetch request
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 second timeout
 
-      console.log('📥 [Frontend] Response status:', response.status);
-      console.log('📥 [Frontend] Response ok:', response.ok);
+      let response;
+      let responseData;
+      
+      try {
+        response = await fetch('/api/research', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody),
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        console.log('📥 [Frontend] Response status:', response.status);
+        console.log('📥 [Frontend] Response ok:', response.ok);
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ [Frontend] API error response:', errorText);
-        throw new Error(`Assessment submission failed: ${response.status} ${errorText}`);
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('❌ [Frontend] API error response:', errorText);
+          
+          // Handle specific error cases
+          if (response.status === 504 || response.status === 408) {
+            console.log('⏰ [Frontend] Request timed out, but may be processing in background');
+            // For timeout, we'll try to recover by polling for any existing profile
+            throw new Error('Request timed out. We\'re continuing to process your assessment...');
+          }
+          
+          throw new Error(`Assessment submission failed: ${response.status} ${errorText}`);
+        }
+
+        responseData = await response.json();
+        console.log('✅ [Frontend] API response:', responseData);
+        
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        
+        if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+          console.log('⏰ [Frontend] Request aborted due to timeout');
+          throw new Error('Request timed out. Your assessment may still be processing...');
+        }
+        
+        throw fetchError;
       }
 
-      const responseData = await response.json();
-      console.log('✅ [Frontend] API response:', responseData);
       const { profile_id } = responseData;
       
-      console.log('🔄 [Frontend] Starting polling for results...');
-      // Poll for results
+      if (!profile_id) {
+        throw new Error('No profile ID received from server');
+      }
+      
+      console.log('🔄 [Frontend] Starting polling for results with profile ID:', profile_id);
+      
+      // Poll for results with improved error handling
+      let pollAttempts = 0;
+      const maxPollAttempts = 60; // Poll for up to 2 minutes
       const pollResults = async () => {
-        console.log('🔍 [Frontend] Polling for report...');
+        console.log(`🔍 [Frontend] Polling attempt ${pollAttempts + 1}/${maxPollAttempts}...`);
+        pollAttempts++;
+        
         try {
           const reportResponse = await fetch(`/api/reports/${profile_id}`);
           console.log('📊 [Frontend] Report response status:', reportResponse.status);
@@ -196,24 +236,42 @@ export default function Intake() {
             setCurrentStep(5);
             setIsAnalyzing(false);
             clearInterval(stepInterval);
-          } else {
+            return; // Success - stop polling
+          } else if (reportResponse.status === 404) {
             console.log('⏳ [Frontend] Report not ready yet, continuing to poll...');
-            // Continue polling
-            setTimeout(pollResults, 2000);
+            // Continue polling if report not ready
+          } else {
+            console.error('❌ [Frontend] Unexpected response status:', reportResponse.status);
+            const errorText = await reportResponse.text();
+            console.error('❌ [Frontend] Error response:', errorText);
           }
         } catch (pollError) {
           console.error('❌ [Frontend] Polling error:', pollError);
+        }
+
+        // Check if we should continue polling
+        if (pollAttempts < maxPollAttempts) {
           setTimeout(pollResults, 2000);
+        } else {
+          console.error('❌ [Frontend] Polling timeout - max attempts reached');
+          setIsAnalyzing(false);
+          clearInterval(stepInterval);
+          alert('Analysis is taking longer than expected. Please try refreshing the page in a few minutes.');
         }
       };
 
-      setTimeout(pollResults, 6000);
+      // Start polling after a brief delay to allow backend processing to begin
+      setTimeout(pollResults, 3000);
+      
     } catch (error) {
       console.error('💥 [Frontend] Assessment failed:', error);
       console.error('📚 [Frontend] Error details:', error instanceof Error ? error.stack : 'No stack trace');
       setIsAnalyzing(false);
       clearInterval(stepInterval);
-      // TODO: Show error message to user
+      
+      // Show user-friendly error message
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+      alert(`Assessment failed: ${errorMessage}\n\nPlease try again. If the problem persists, your assessment may still be processing in the background.`);
     }
   };
 

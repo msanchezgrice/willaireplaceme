@@ -99,33 +99,34 @@ If you cannot access the profile or extract information, return {"error": "Unabl
   }
 }
 
-// Function to trigger analysis directly (instead of fire-and-forget)
-async function triggerAnalysis(profileId: string, evidence: any) {
-  console.log('🔥 [Research API] Starting direct analysis trigger...');
+// Function to trigger analysis asynchronously (fire-and-forget)
+async function triggerAnalysisAsync(profileId: string, evidence: any) {
+  console.log('🔥 [Research API] Starting async analysis trigger...');
   
-  try {
-    const analysisUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/api/analyze`;
-    console.log('🎯 [Research API] Analysis URL:', analysisUrl);
-    
-    const response = await fetch(analysisUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ profile_id: profileId, evidence })
-    });
+  // Don't await this - let it run in background
+  setTimeout(async () => {
+    try {
+      const analysisUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/api/analyze`;
+      console.log('🎯 [Research API] Analysis URL:', analysisUrl);
+      
+      const response = await fetch(analysisUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profile_id: profileId, evidence })
+      });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ [Research API] Analysis failed:', response.status, errorText);
-      throw new Error(`Analysis failed: ${response.status} ${errorText}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ [Research API] Analysis failed:', response.status, errorText);
+        throw new Error(`Analysis failed: ${response.status} ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log('✅ [Research API] Analysis triggered successfully:', result);
+    } catch (error) {
+      console.error('💥 [Research API] Background analysis error:', error);
     }
-
-    const result = await response.json();
-    console.log('✅ [Research API] Analysis triggered successfully:', result);
-    return result;
-  } catch (error) {
-    console.error('💥 [Research API] Analysis trigger error:', error);
-    throw error;
-  }
+  }, 100); // Small delay to let response return first
 }
 
 export async function POST(req: NextRequest) {
@@ -161,32 +162,42 @@ export async function POST(req: NextRequest) {
     console.log('🤖 [Research API] Creating OpenAI client...');
     const openai = new OpenAI({ 
       apiKey: process.env.OPENAI_API_KEY,
-      timeout: 30000 // 30 second timeout
+      timeout: 20000 // Reduced timeout for faster response
     });
 
-    // LinkedIn Profile Analysis
+    // LinkedIn Profile Analysis (with timeout)
     let linkedinData = null;
     if (linkedinUrl && linkedinUrl.trim()) {
       console.log('🔗 [Research API] Processing LinkedIn profile...');
-      linkedinData = await analyzeLinkedInProfile(openai, linkedinUrl.trim());
-      
-      if (linkedinData && !linkedinData.error) {
-        console.log('✅ [Research API] LinkedIn data extracted successfully');
+      try {
+        linkedinData = await Promise.race([
+          analyzeLinkedInProfile(openai, linkedinUrl.trim()),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('LinkedIn analysis timeout')), 15000)
+          )
+        ]);
         
-        // Enhance resume content with LinkedIn data
-        if (linkedinData.dailyTasks) {
-          sanitizedResume += `\n\nLinkedIn Profile Insights:\n${linkedinData.dailyTasks}`;
+        if (linkedinData && !linkedinData.error) {
+          console.log('✅ [Research API] LinkedIn data extracted successfully');
+          
+          // Enhance resume content with LinkedIn data
+          if (linkedinData.dailyTasks) {
+            sanitizedResume += `\n\nLinkedIn Profile Insights:\n${linkedinData.dailyTasks}`;
+          }
+          if (linkedinData.skills && Array.isArray(linkedinData.skills)) {
+            sanitizedResume += `\n\nKey Skills: ${linkedinData.skills.join(', ')}`;
+          }
+          if (linkedinData.careerProgression) {
+            sanitizedResume += `\n\nCareer Progression: ${linkedinData.careerProgression}`;
+          }
+          
+          console.log('📏 [Research API] Enhanced resume length after LinkedIn:', sanitizedResume.length);
+        } else {
+          console.log('⚠️ [Research API] LinkedIn analysis failed, continuing without LinkedIn data');
         }
-        if (linkedinData.skills && Array.isArray(linkedinData.skills)) {
-          sanitizedResume += `\n\nKey Skills: ${linkedinData.skills.join(', ')}`;
-        }
-        if (linkedinData.careerProgression) {
-          sanitizedResume += `\n\nCareer Progression: ${linkedinData.careerProgression}`;
-        }
-        
-        console.log('📏 [Research API] Enhanced resume length after LinkedIn:', sanitizedResume.length);
-      } else {
-        console.log('⚠️ [Research API] LinkedIn analysis failed, continuing without LinkedIn data');
+      } catch (linkedinError) {
+        console.log('⚠️ [Research API] LinkedIn analysis timeout/error, continuing without LinkedIn data:', linkedinError);
+        linkedinData = null;
       }
     }
 
@@ -209,62 +220,72 @@ export async function POST(req: NextRequest) {
 
     console.log('✅ [Research API] Profile created:', profile);
 
-    console.log('📝 [Research API] Generating research prompt...');
-    const prompt = researchPrompt({ 
-      role: sanitizedRole, 
-      tasks, 
-      resume: sanitizedResume,
-      linkedinData: linkedinData || null,
-      profileData: profileData || null
-    });
-    console.log('📄 [Research API] Prompt length:', prompt.length);
+    // Return profile_id immediately, then continue processing in background
+    console.log('⚡ [Research API] Returning profile_id immediately for fast response');
+    
+    // Start background processing
+    setTimeout(async () => {
+      try {
+        console.log('📝 [Research API] Starting background AI research...');
+        const prompt = researchPrompt({ 
+          role: sanitizedRole, 
+          tasks, 
+          resume: sanitizedResume,
+          linkedinData: linkedinData || null,
+          profileData: profileData || null
+        });
+        console.log('📄 [Research API] Prompt length:', prompt.length);
 
-    console.log('🚀 [Research API] Calling OpenAI API...');
-    const research = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      temperature: 0.2,
-      messages: [{ role: 'system', content: prompt }]
-    });
+        console.log('🚀 [Research API] Calling OpenAI API...');
+        const research = await openai.chat.completions.create({
+          model: 'gpt-4o',
+          temperature: 0.2,
+          messages: [{ role: 'system', content: prompt }]
+        });
 
-    console.log('✅ [Research API] OpenAI response received');
-    console.log('📊 [Research API] Response usage:', research.usage);
+        console.log('✅ [Research API] OpenAI response received');
+        console.log('📊 [Research API] Response usage:', research.usage);
 
-    const responseContent = research.choices[0].message.content;
-    console.log('📄 [Research API] Response content:', responseContent?.substring(0, 500) + '...');
+        const responseContent = research.choices[0].message.content;
+        console.log('📄 [Research API] Response content:', responseContent?.substring(0, 500) + '...');
 
-    if (!responseContent) {
-      console.error('❌ [Research API] Empty response from OpenAI');
-      return NextResponse.json({ error: 'Empty response from AI' }, { status: 500 });
-    }
+        if (!responseContent) {
+          console.error('❌ [Research API] Empty response from OpenAI');
+          return;
+        }
 
-    console.log('🔧 [Research API] Parsing JSON response...');
-    let evidence;
-    try {
-      evidence = JSON.parse(responseContent);
-      console.log('✅ [Research API] JSON parsed successfully');
-      
-      // Add LinkedIn data to evidence if available
-      if (linkedinData && !linkedinData.error) {
-        evidence.linkedinProfile = linkedinData;
+        console.log('🔧 [Research API] Parsing JSON response...');
+        let evidence;
+        try {
+          evidence = JSON.parse(responseContent);
+          console.log('✅ [Research API] JSON parsed successfully');
+          
+          // Add LinkedIn data to evidence if available
+          if (linkedinData && !linkedinData.error) {
+            evidence.linkedinProfile = linkedinData;
+          }
+        } catch (parseError) {
+          console.error('❌ [Research API] JSON parse error:', parseError);
+          console.log('📄 [Research API] Raw content that failed to parse:', responseContent);
+          return;
+        }
+
+        console.log('🔥 [Research API] Triggering analysis async...');
+        // Trigger analysis without awaiting
+        triggerAnalysisAsync(profile.id, evidence);
+        console.log('✅ [Research API] Background processing completed');
+        
+      } catch (backgroundError) {
+        console.error('💥 [Research API] Background processing error:', backgroundError);
       }
-    } catch (parseError) {
-      console.error('❌ [Research API] JSON parse error:', parseError);
-      console.log('📄 [Research API] Raw content that failed to parse:', responseContent);
-      return NextResponse.json({ error: 'Invalid AI response format' }, { status: 500 });
-    }
-
-    console.log('🔥 [Research API] Triggering analysis...');
-    // Call analysis directly instead of fire-and-forget
-    try {
-      await triggerAnalysis(profile.id, evidence);
-      console.log('✅ [Research API] Analysis completed successfully');
-    } catch (analysisError) {
-      console.error('❌ [Research API] Analysis failed, but profile created:', analysisError);
-      // Don't fail the entire request if analysis fails - let user know to try again
-    }
+    }, 100);
 
     console.log('✅ [Research API] Request completed successfully');
-    return NextResponse.json({ status: 'processing', profile_id: profile.id });
+    return NextResponse.json({ 
+      status: 'processing', 
+      profile_id: profile.id,
+      message: 'Analysis started, results will be available shortly'
+    });
 
   } catch (error) {
     console.error('💥 [Research API] Unexpected error:', error);
