@@ -83,34 +83,73 @@ Return ONLY the JSON object with extracted data.`
     }
 
     try {
-      // Try to parse JSON response
+      // Try to parse JSON response directly first
       const profileData = JSON.parse(responseContent);
       console.log('✅ [Research API] LinkedIn profile analyzed successfully with web search');
       return profileData;
     } catch (parseError) {
       console.error('❌ [Research API] Failed to parse LinkedIn analysis:', parseError);
-      console.log('📄 [Research API] Raw response:', responseContent.substring(0, 500));
+      console.log('📄 [Research API] Raw response (first 1000 chars):', responseContent.substring(0, 1000));
       
-      // Try to extract JSON from response text
-      const jsonMatch = responseContent.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
+      // Enhanced JSON extraction - try multiple patterns
+      let extractedJson = null;
+      
+      // Pattern 1: Look for JSON blocks in markdown code blocks
+      const codeBlockMatch = responseContent.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+      if (codeBlockMatch) {
         try {
-          const extractedData = JSON.parse(jsonMatch[0]);
-          console.log('✅ [Research API] Extracted JSON from response text');
-          return extractedData;
-        } catch (extractError) {
-          console.error('❌ [Research API] Failed to extract JSON from response');
+          extractedJson = JSON.parse(codeBlockMatch[1]);
+          console.log('✅ [Research API] Extracted JSON from markdown code block');
+          return extractedJson;
+        } catch (codeBlockError) {
+          console.log('⚠️ [Research API] Failed to parse JSON from code block');
         }
       }
       
-      // Return structured fallback with raw analysis
+      // Pattern 2: Look for the largest JSON object in the text
+      const jsonMatches = responseContent.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g);
+      if (jsonMatches) {
+        // Try each match, starting with the longest
+        const sortedMatches = jsonMatches.sort((a, b) => b.length - a.length);
+        for (const match of sortedMatches) {
+          try {
+            extractedJson = JSON.parse(match);
+            console.log('✅ [Research API] Extracted JSON from text pattern');
+            return extractedJson;
+          } catch (matchError) {
+            // Continue to next match
+          }
+        }
+      }
+      
+      // Pattern 3: Try to extract JSON after removing common prefixes/suffixes
+      const cleanedContent = responseContent
+        .replace(/^[\s\S]*?(?=\{)/, '') // Remove everything before first {
+        .replace(/\}(?![^{}]*\{)[\s\S]*$/, '}') // Remove everything after last }
+        .trim();
+        
+      if (cleanedContent.startsWith('{') && cleanedContent.endsWith('}')) {
+        try {
+          extractedJson = JSON.parse(cleanedContent);
+          console.log('✅ [Research API] Extracted JSON after cleaning');
+          return extractedJson;
+        } catch (cleanError) {
+          console.log('⚠️ [Research API] Failed to parse cleaned JSON');
+        }
+      }
+      
+      // If all JSON parsing fails, return structured fallback with analysis
+      console.log('⚠️ [Research API] Using fallback structure with raw analysis');
       return {
         error: false,
         rawAnalysis: responseContent,
-        extractedInfo: "LinkedIn profile analyzed with web search but needs manual parsing",
-        currentTitle: "Available in raw analysis",
-        company: "Available in raw analysis",
-        yearsExperience: "Available in raw analysis"
+        extractedInfo: "LinkedIn profile analyzed with web search",
+        currentTitle: "See raw analysis",
+        company: "See raw analysis", 
+        yearsExperience: "See raw analysis",
+        skills: ["Analysis available in raw format"],
+        industry: "See raw analysis",
+        parseError: "Could not extract structured JSON, but analysis completed"
       };
     }
   } catch (error) {
@@ -470,8 +509,49 @@ Provide ONLY verifiable information from your web searches. Include real URLs wh
           }
         } catch (parseError) {
           console.error('❌ [Research API] JSON parse error:', parseError);
-          console.log('📄 [Research API] Raw content that failed to parse:', responseContent);
-          throw parseError;
+          console.log('📄 [Research API] Raw content that failed to parse (first 1000 chars):', responseContent.substring(0, 1000));
+          
+          // Enhanced JSON extraction for research response
+          let extractedJson = null;
+          
+          // Try to extract JSON from markdown code blocks
+          const codeBlockMatch = responseContent.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+          if (codeBlockMatch) {
+            try {
+              extractedJson = JSON.parse(codeBlockMatch[1]);
+              console.log('✅ [Research API] Extracted research JSON from code block');
+            } catch (codeBlockError) {
+              console.log('⚠️ [Research API] Code block JSON parsing failed');
+            }
+          }
+          
+          // Try to find the largest JSON object in response
+          if (!extractedJson) {
+            const jsonMatches = responseContent.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g);
+            if (jsonMatches) {
+              const sortedMatches = jsonMatches.sort((a, b) => b.length - a.length);
+              for (const match of sortedMatches) {
+                try {
+                  extractedJson = JSON.parse(match);
+                  console.log('✅ [Research API] Extracted research JSON from text pattern');
+                  break;
+                } catch (matchError) {
+                  // Continue to next match
+                }
+              }
+            }
+          }
+          
+          if (extractedJson) {
+            evidence = extractedJson;
+            // Add LinkedIn data to evidence if available
+            if (linkedinData && !linkedinData.error) {
+              evidence.linkedinProfile = linkedinData;
+            }
+          } else {
+            console.error('❌ [Research API] Could not extract JSON from response');
+            throw parseError;
+          }
         }
 
         console.log('🔥 [Research API] Calling analyze API directly...');
