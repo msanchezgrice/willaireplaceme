@@ -183,6 +183,32 @@ function ReportContent() {
     }
   };
 
+  // Function to extract specific sections from the full report
+  const extractSection = (content: string, sectionTitle: string): string => {
+    if (!content) return '';
+    
+    // Create regex to match the section header and capture content until next major header
+    const sectionRegex = new RegExp(
+      `## ${sectionTitle}([\\s\\S]*?)(?=## |$)`,
+      'i'
+    );
+    
+    const match = content.match(sectionRegex);
+    return match ? match[1].trim() : '';
+  };
+
+  // Extract 90-Day Action Plan content
+  const getActionPlanContent = (fullReport: string): string => {
+    const actionPlan = extractSection(fullReport, '90-Day Action Plan');
+    return actionPlan || extractSection(fullReport, 'Action Plan') || 'Action plan content will be extracted from the full report or generated separately.';
+  };
+
+  // Extract Skill Development content  
+  const getSkillDevelopmentContent = (fullReport: string): string => {
+    const skillDev = extractSection(fullReport, 'Skill Development Roadmap');
+    return skillDev || extractSection(fullReport, 'Skill Development') || 'Skill development recommendations will be extracted from the full report.';
+  };
+
   if (!isLoaded || loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -364,9 +390,7 @@ function ReportContent() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-slate-600">
-                        Action plan content will be extracted from the full report or generated separately.
-                      </div>
+                      <MarkdownContent content={getActionPlanContent(reportData.full_report)} />
                     </CardContent>
                   </Card>
 
@@ -382,9 +406,7 @@ function ReportContent() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-slate-600">
-                        Skill development recommendations will be extracted from the full report.
-                      </div>
+                      <MarkdownContent content={getSkillDevelopmentContent(reportData.full_report)} />
                     </CardContent>
                   </Card>
                 </>

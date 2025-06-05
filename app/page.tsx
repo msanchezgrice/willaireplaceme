@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useUser, UserButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,10 +18,15 @@ import {
   Star,
   ArrowRight,
   Menu,
-  Linkedin
+  Linkedin,
+  LogIn,
+  User
 } from "lucide-react";
 
 export default function Home() {
+  const router = useRouter();
+  const { isSignedIn, user, isLoaded } = useUser();
+
   const careerCategories = [
     {
       id: "designer",
@@ -69,7 +78,12 @@ export default function Home() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <h1 className="text-xl font-bold text-slate-900">AICareerShield</h1>
+                <button 
+                  onClick={() => router.push('/')}
+                  className="text-xl font-bold text-slate-900 hover:text-primary transition-colors"
+                >
+                  AICareerShield
+                </button>
               </div>
             </div>
             <div className="hidden md:block">
@@ -77,9 +91,53 @@ export default function Home() {
                 <a href="#how-it-works" className="text-slate-600 hover:text-slate-900 px-3 py-2 text-sm font-medium transition-colors">How It Works</a>
                 <a href="#careers" className="text-slate-600 hover:text-slate-900 px-3 py-2 text-sm font-medium transition-colors">Career Categories</a>
                 <a href="#pricing" className="text-slate-600 hover:text-slate-900 px-3 py-2 text-sm font-medium transition-colors">Pricing</a>
-                <Link href="/intake">
-                  <Button>Start Assessment</Button>
-                </Link>
+                
+                {/* Authentication Section */}
+                {isLoaded && (
+                  <>
+                    {isSignedIn ? (
+                      <div className="flex items-center space-x-4">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => router.push('/dashboard')}
+                        >
+                          <User className="w-4 h-4 mr-2" />
+                          Dashboard
+                        </Button>
+                        <UserButton 
+                          appearance={{
+                            elements: {
+                              avatarBox: "w-8 h-8"
+                            }
+                          }}
+                          userProfileMode="navigation"
+                          userProfileUrl="/dashboard"
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex items-center space-x-3">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => router.push('/sign-in')}
+                        >
+                          <LogIn className="w-4 h-4 mr-2" />
+                          Sign In
+                        </Button>
+                        <Link href="/intake">
+                          <Button size="sm">Start Assessment</Button>
+                        </Link>
+                      </div>
+                    )}
+                  </>
+                )}
+                
+                {!isLoaded && (
+                  <Link href="/intake">
+                    <Button size="sm">Start Assessment</Button>
+                  </Link>
+                )}
               </div>
             </div>
             <div className="md:hidden">
