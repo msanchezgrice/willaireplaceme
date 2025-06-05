@@ -5,6 +5,7 @@ import { analysisPrompt } from '@/server/promptTemplates';
 import { score } from '@/server/score';
 
 export const runtime = 'edge';
+export const maxDuration = 300; // 5 minutes for edge function
 
 // Function to sanitize text for database insertion
 function sanitizeText(text: string): string {
@@ -89,7 +90,7 @@ export async function POST(req: NextRequest) {
     console.log('🤖 [Analyze API] Creating OpenAI client...');
     const openai = new OpenAI({ 
       apiKey: process.env.OPENAI_API_KEY,
-      timeout: 60000 // 60 second timeout for analysis
+      timeout: 300000 // 5 minutes timeout instead of 60 seconds
     });
 
     console.log('📝 [Analyze API] Generating enhanced analysis prompt with user context...');
