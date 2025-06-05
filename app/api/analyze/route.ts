@@ -48,15 +48,53 @@ export async function POST(req: NextRequest) {
     );
     console.log('✅ [Analyze API] Supabase client created');
 
+    // Fetch user profile data for personalized analysis
+    console.log('👤 [Analyze API] Fetching user profile data...');
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', profile_id)
+      .single();
+
+    if (profileError) {
+      console.error('❌ [Analyze API] Error fetching profile:', profileError);
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+    }
+
+    console.log('✅ [Analyze API] Profile data fetched:', {
+      role: profileData.role,
+      hasResume: !!profileData.resume,
+      taskCount: Object.keys(profileData.task_hours || {}).length,
+      hasProfileData: !!profileData.profile_data,
+      hasLinkedinData: !!profileData.linkedin_data
+    });
+
+    // Prepare enhanced user profile for analysis
+    const enhancedProfile = {
+      role: profileData.role,
+      resume: profileData.resume,
+      taskHours: profileData.task_hours,
+      // Extract from profile_data JSON
+      yearsExperience: profileData.profile_data?.yearsExperience,
+      companySize: profileData.profile_data?.companySize,
+      dailyWorkSummary: profileData.profile_data?.dailyWorkSummary,
+      keySkills: profileData.profile_data?.keySkills,
+      careerCategory: profileData.profile_data?.careerCategory,
+      linkedinUrl: profileData.profile_data?.linkedinUrl,
+      // Include LinkedIn analysis if available
+      linkedinData: profileData.linkedin_data,
+      createdAt: profileData.created_at
+    };
+
     console.log('🤖 [Analyze API] Creating OpenAI client...');
     const openai = new OpenAI({ 
       apiKey: process.env.OPENAI_API_KEY,
       timeout: 60000 // 60 second timeout for analysis
     });
 
-    console.log('📝 [Analyze API] Generating analysis prompt...');
-    const prompt = analysisPrompt(JSON.stringify(evidence));
-    console.log('📄 [Analyze API] Prompt length:', prompt.length);
+    console.log('📝 [Analyze API] Generating enhanced analysis prompt with user context...');
+    const prompt = analysisPrompt(JSON.stringify(evidence), enhancedProfile);
+    console.log('📄 [Analyze API] Enhanced prompt length:', prompt.length);
 
     console.log('🚀 [Analyze API] Calling OpenAI API (gpt-4o model)...');
     // Use gpt-4o instead of o3 for now since o3 might not be available

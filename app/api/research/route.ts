@@ -178,7 +178,17 @@ export async function POST(req: NextRequest) {
         role: sanitizedRole, 
         resume: sanitizedResume, 
         task_hours: tasks || {},
-        email: null // We're not collecting email in the current flow
+        email: null, // We're not collecting email in the current flow
+        // Store additional profile data as JSON
+        profile_data: profileData ? {
+          careerCategory: profileData.careerCategory,
+          yearsExperience: profileData.yearsExperience,
+          companySize: profileData.companySize,
+          dailyWorkSummary: profileData.dailyWorkSummary,
+          keySkills: profileData.keySkills,
+          linkedinUrl: linkedinUrl
+        } : null,
+        linkedin_data: linkedinData && !linkedinData.error ? linkedinData : null
       }])
       .select()
       .single();

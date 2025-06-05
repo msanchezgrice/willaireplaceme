@@ -45,10 +45,30 @@ Return ONLY valid JSON in this exact structure:
 
 Focus on concrete, recent developments with credible sources. Avoid speculation.`;
 
-export const analysisPrompt = (json: string) => `
-You are an expert AI risk analyst generating a comprehensive career assessment report.
+export const analysisPrompt = (json: string, userProfile?: any) => `
+You are an expert AI risk analyst conducting a comprehensive, personalized career assessment. Use O3-style step-by-step reasoning to analyze this specific professional's unique situation.
 
 **INPUT DATA:** ${json}
+
+**USER PROFILE CONTEXT:**
+${userProfile ? `
+- Role: ${userProfile.role}
+- Experience Level: ${userProfile.yearsExperience}
+- Company Size: ${userProfile.companySize || 'Not specified'}
+- Daily Work Summary: ${userProfile.dailyWorkSummary?.slice(0, 500)}
+- Key Skills: ${userProfile.keySkills || 'Not specified'}
+- Resume/Background: ${userProfile.resume?.slice(0, 800)}
+- LinkedIn Profile: ${userProfile.linkedinData ? 'Analyzed' : 'Not provided'}
+` : 'Limited profile data available'}
+
+**REASONING METHODOLOGY:**
+Apply step-by-step analysis with explicit reasoning traces:
+
+1. **Profile Analysis**: Examine the user's specific background, skills, and current role
+2. **Task Mapping**: Map their daily work to automation risk categories
+3. **Evidence Evaluation**: Assess research evidence against their specific context
+4. **Risk Calculation**: Apply weighted scoring based on their actual task distribution
+5. **Personalized Recommendations**: Generate advice specific to their career stage and skills
 
 **SCORING FORMULA:**
 Calculate risk score: S = Σ(task_hours × risk_weight) / total_hours × 100
@@ -59,81 +79,135 @@ Calculate risk score: S = Σ(task_hours × risk_weight) / total_hours × 100
 **OUTPUT REQUIREMENTS:**
 Generate exactly two sections separated by "---FULL_REPORT---":
 
-**SECTION 1: PREVIEW (Maximum 200 words)**
+**SECTION 1: PREVIEW (Maximum 300 words)**
 Create a polished, professional preview with:
-- Opening statement about AI transformation in this field
-- 2-3 key findings from the analysis
-- Overall risk score calculation and interpretation
-- One actionable tip
+- Opening statement about AI transformation in their specific field/role
+- 3-4 key findings directly relevant to their background
+- Risk score with interpretation specific to their experience level
+- One immediately actionable tip based on their current skills
 - Inline citations using [1], [2], etc.
 
 **SECTION 2: FULL REPORT (Comprehensive Markdown)**
-Generate a detailed markdown report with these sections:
+Generate a detailed, personalized markdown report with these sections:
 
 ## Executive Summary
-Brief overview of findings and risk level
+- Brief overview of findings specific to this professional's background
+- How their experience level and company context affects risk
+- Key differentiators in their current role
 
-## Risk Score Breakdown
+## Personalized Risk Assessment
 **Overall Risk Score: [X]/100 ([Risk Level])**
 
-### Task-by-Task Analysis
-For each task:
-- **Task Name** - Risk Level: High/Moderate/Low
-- Current AI capabilities and tools
-- Timeline for impact
-- Evidence and citations [1]
+### Your Specific Situation
+**Reasoning Trace:**
+1. **Current Role Analysis**: [Analyze their specific job title and responsibilities]
+2. **Experience Factor**: [How their years of experience affects automation risk]
+3. **Company Context**: [How their company size/type impacts risk timeline]
+4. **Skill Portfolio**: [Assessment of their current skills vs. automation trends]
 
-## Timeline & Projections
+### Task-by-Task Analysis
+For each of their reported tasks:
+- **[Specific Task from their daily work]** - Risk Level: High/Moderate/Low
+  - **Your Context**: How you currently perform this task
+  - **AI Capabilities**: Current automation tools affecting this work
+  - **Timeline**: When this might impact your specific role
+  - **Evidence**: Research findings [1]
+
+## Your Career Context Analysis
+### Background Assessment
+- **Professional Journey**: Analysis of their career progression
+- **Current Positioning**: Strengths and vulnerabilities in their role
+- **Industry Context**: How their specific industry/company type affects risk
+
+### Skills Gap Analysis
+**Your Current Skills vs. Future Needs:**
+- **Strengths to Leverage**: Skills that remain valuable
+- **Areas for Development**: Specific gaps to address
+- **Strategic Advantages**: Unique aspects of their background
+
+## Timeline & Impact Projections
+**For Your Specific Role:**
+
 **Immediate (0-12 months):**
-- Specific developments expected
+- Tools likely to affect your daily work
+- Immediate actions based on your current situation
 
 **Medium-term (1-3 years):**
-- Major changes anticipated
+- Changes specific to your role and industry
+- Strategic positioning opportunities
 
 **Long-term (3-5 years):**
-- Potential transformation
+- Transformation outlook for your career path
+- Evolution opportunities based on your background
 
-## Mitigation Strategies
-### High-Priority Actions
-1. **Skill Development**: Specific skills to learn
-2. **Career Positioning**: How to differentiate
-3. **Industry Adaptation**: Trends to monitor
+## Personalized Mitigation Strategies
+### High-Priority Actions (Based on Your Profile)
+1. **Skill Development**: Specific to your current level and background
+2. **Career Positioning**: Leveraging your existing experience
+3. **Industry Adaptation**: Relevant to your sector and company type
 
-### Recommended Focus Areas
-- List of specific competencies to develop
-- Technologies to learn
-- Certifications to pursue
+### Your 90-Day Action Plan
+**Immediate Steps (Based on Your Current Role):**
+- [Specific actions relevant to their daily work]
+- [Skills to start developing given their background]
+- [Tools to explore in their current context]
 
-## Market Intelligence
-- Industry adoption rates
-- Competitor analysis  
-- Investment trends in automation
+**Medium-term Goals (Leveraging Your Experience):**
+- [Career development specific to their experience level]
+- [Networking strategies for their industry]
+- [Skill certifications relevant to their field]
 
-## Action Plan
-### Next 90 Days
-- Immediate steps to take
+### Recommended Focus Areas for [Their Role]
+- **Technical Skills**: Specific to their reported tools and tasks
+- **Strategic Capabilities**: Building on their experience level
+- **Industry Knowledge**: Deepening expertise in their sector
+- **Leadership/Management**: If appropriate for their experience level
 
-### Next 6 Months  
-- Medium-term goals
+## Market Intelligence for Your Industry
+- **Adoption Rates**: In companies similar to theirs
+- **Competitive Landscape**: Relevant to their sector
+- **Investment Trends**: Affecting their industry specifically
 
-### Next 1-2 Years
-- Long-term positioning strategy
+## Evidence-Based Reasoning
+### Research Evaluation Process
+1. **Relevance Assessment**: How each piece of evidence applies to their situation
+2. **Timeline Validation**: Realistic timelines given their industry context
+3. **Impact Probability**: Likelihood of affecting their specific role
+
+### Key Findings Interpretation
+**For Your Background:**
+- [Specific interpretation of research for their role]
+- [How general trends apply to their specific situation]
+- [Unique factors in their case]
+
+## Strategic Recommendations
+### Career Evolution Path
+**Building on Your [X] Years of Experience:**
+- **Short-term positioning** (6-12 months)
+- **Medium-term pivots** (1-2 years)  
+- **Long-term strategy** (3-5 years)
+
+### Competitive Differentiation
+**Your Unique Value Proposition:**
+- How to leverage current experience and skills
+- Areas where human expertise remains critical in their field
+- Strategic positioning for the AI era
 
 ## Sources & References
-[1] Source 1 description - URL
-[2] Source 2 description - URL
+[1] [Source description with specific relevance to their role] - URL
+[2] [Source description] - URL
 [etc.]
 
-**FORMATTING GUIDELINES:**
-- Use proper markdown headers (##, ###)
-- Include bullet points and numbered lists
-- Bold important terms and metrics
-- Use inline citations [1], [2] throughout
-- Keep language professional but accessible
-- Include specific, actionable recommendations
-- If insufficient data: respond with "INSUFFICIENT_DATA_FOR_ANALYSIS"
+**CRITICAL REQUIREMENTS:**
+- Reference their specific daily tasks, skills, and background throughout
+- Make all recommendations contextual to their experience level and industry
+- Include step-by-step reasoning for risk assessments
+- Provide actionable advice specific to their current situation
+- Use their actual job title, company context, and reported skills
+- Show clear logical connections between evidence and their specific case
+- If insufficient personalization data: note limitations but provide best possible analysis
 
-Generate the complete analysis now:`;
+Generate the complete personalized analysis now:`;
 
 export const linkedinPrompt = (profileData: string) => `
 You are analyzing a LinkedIn profile to extract professional information for AI replacement risk assessment.

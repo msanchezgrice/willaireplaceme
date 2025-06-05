@@ -9,6 +9,8 @@ create table profiles (
   role text not null,
   resume text,
   task_hours jsonb,
+  profile_data jsonb, -- Additional form data from user
+  linkedin_data jsonb, -- LinkedIn profile analysis results
   created_at timestamp default now()
 );
 
