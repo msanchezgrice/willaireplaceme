@@ -5,7 +5,7 @@ import OpenAI from 'openai';
 import { researchPrompt, linkedinPrompt } from '@/server/promptTemplates';
 
 export const runtime = 'edge';
-export const maxDuration = 300; // 5 minutes for edge function
+export const maxDuration = 900; // 15 minutes for edge function
 
 // Function to sanitize text for database insertion
 function sanitizeText(text: string): string {
@@ -384,12 +384,12 @@ export async function POST(req: NextRequest) {
 
     console.log('✅ [Research API] Profile created:', profile);
 
-    // Do the AI research and analysis synchronously with timeout
+    // Do the AI research and analysis asynchronously in background
     console.log('📝 [Research API] Starting AI research and analysis...');
     
-    try {
-      // Set a timeout for the entire analysis process
-      const analysisPromise = (async () => {
+    // Don't wait for analysis to complete - start it in background and return immediately
+    (async () => {
+      try {
         console.log('📝 [Research API] Generating research prompt...');
         const prompt = researchPrompt({ 
           role: sanitizedRole, 
@@ -492,31 +492,17 @@ Return ONLY the JSON object. Do not include explanatory text before or after the
         }
 
         const result = await analysisResponse.json();
-        console.log('✅ [Research API] Analysis completed successfully:', result);
-        return result;
-      })();
+        console.log('✅ [Research API] Background analysis completed successfully:', result);
+      } catch (analysisError) {
+        console.error('💥 [Research API] Background analysis failed:', analysisError);
+      }
+    })(); // Start analysis in background without waiting
 
-      // Wait for analysis with extended 10 minute timeout
-      await Promise.race([
-        analysisPromise,
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Analysis timeout after 10 minutes')), 600000) // 10 minutes instead of 30 seconds
-        )
-      ]);
-
-      console.log('✅ [Research API] Full analysis pipeline completed');
-      
-    } catch (analysisError) {
-      console.error('💥 [Research API] Analysis failed:', analysisError);
-      // Don't fail the entire request if analysis fails - user can retry
-      console.log('⚠️ [Research API] Continuing despite analysis failure');
-    }
-
-    console.log('✅ [Research API] Request completed successfully');
+    console.log('✅ [Research API] Request completed successfully - analysis running in background');
     return NextResponse.json({ 
       status: 'processing', 
       profile_id: profile.id,
-      message: 'Analysis started, results will be available shortly'
+      message: 'Analysis started, results will be available shortly. Please wait for polling to complete.'
     });
 
   } catch (error) {

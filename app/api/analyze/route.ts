@@ -5,7 +5,7 @@ import { analysisPrompt } from '@/server/promptTemplates';
 import { score } from '@/server/score';
 
 export const runtime = 'edge';
-export const maxDuration = 300; // 5 minutes for edge function
+export const maxDuration = 900; // 15 minutes for edge function
 
 // Function to sanitize text for database insertion
 function sanitizeText(text: string): string {

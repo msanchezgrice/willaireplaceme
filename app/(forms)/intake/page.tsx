@@ -218,7 +218,7 @@ export default function Intake() {
       
       // Poll for results with improved error handling
       let pollAttempts = 0;
-      const maxPollAttempts = 60; // Poll for up to 2 minutes
+      const maxPollAttempts = 180; // Poll for up to 6 minutes (180 x 2 seconds)
       const pollResults = async () => {
         console.log(`🔍 [Frontend] Polling attempt ${pollAttempts + 1}/${maxPollAttempts}...`);
         pollAttempts++;
@@ -232,9 +232,11 @@ export default function Intake() {
             console.log('✅ [Frontend] Report received:', {
               id: reportData.id,
               score: reportData.score,
-              preview_length: reportData.preview?.length
+              preview_length: reportData.preview?.length,
+              full_report_length: reportData.full_report?.length
             });
             
+            // Successfully got the report - display results
             setResult({
               id: profile_id,
               riskScore: reportData.score || 50,
@@ -246,11 +248,16 @@ export default function Intake() {
               },
               timeline: "2-4 years",
               previewRecommendations: reportData.preview,
-              hasFullReport: false
+              recommendations: reportData.full_report,
+              hasFullReport: !!reportData.full_report
             });
+            
+            // Move to results step and stop analysis animation
             setCurrentStep(5);
             setIsAnalyzing(false);
             clearInterval(stepInterval);
+            
+            console.log('🎉 [Frontend] Successfully transitioned to results view');
             return; // Success - stop polling
           } else if (reportResponse.status === 404) {
             console.log('⏳ [Frontend] Report not ready yet, continuing to poll...');
@@ -266,17 +273,17 @@ export default function Intake() {
 
         // Check if we should continue polling
         if (pollAttempts < maxPollAttempts) {
-          setTimeout(pollResults, 2000);
+          setTimeout(pollResults, 2000); // Poll every 2 seconds
         } else {
           console.error('❌ [Frontend] Polling timeout - max attempts reached');
           setIsAnalyzing(false);
           clearInterval(stepInterval);
-          alert('Analysis is taking longer than expected. Please try refreshing the page in a few minutes.');
+          alert('Analysis is taking longer than expected. The report may still be processing. Please check back in a few minutes or contact support if the issue persists.');
         }
       };
 
       // Start polling after a brief delay to allow backend processing to begin
-      setTimeout(pollResults, 3000);
+      setTimeout(pollResults, 5000); // Wait 5 seconds before first poll
       
     } catch (error) {
       console.error('💥 [Frontend] Assessment failed:', error);
@@ -782,7 +789,9 @@ export default function Intake() {
 
                 {/* Timeline & Preview */}
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                  <h4 className="font-semibold text-slate-900 mb-3">Key Insights (Preview)</h4>
+                  <h4 className="font-semibold text-slate-900 mb-3">
+                    {result.hasFullReport ? 'Complete Analysis Results' : 'Key Insights (Preview)'}
+                  </h4>
                   <div className="space-y-2 text-sm text-slate-700">
                     <div className="flex items-start">
                       <Clock className="w-4 h-4 text-primary mr-2 mt-0.5 flex-shrink-0" />
@@ -795,11 +804,27 @@ export default function Intake() {
                         }} />
                       </div>
                     )}
+                    {result.hasFullReport && result.recommendations && (
+                      <div className="mt-6">
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                          <div className="flex items-center">
+                            <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
+                            <span className="font-medium text-green-800">Complete Analysis Available</span>
+                          </div>
+                          <p className="text-sm text-green-700 mt-1">Your full detailed report is ready with comprehensive recommendations.</p>
+                        </div>
+                        <div className="prose prose-sm max-w-none">
+                          <div dangerouslySetInnerHTML={{ 
+                            __html: renderPreview(result.recommendations)
+                          }} />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                {/* Email Signup CTA */}
-                {!result.hasFullReport && (
+                {/* Email Signup CTA or Full Report Available */}
+                {!result.hasFullReport ? (
                   <Card className="border-2 border-primary">
                     <CardHeader className="text-center">
                       <CardTitle className="text-lg">Get Your Complete Report</CardTitle>
@@ -829,6 +854,30 @@ export default function Intake() {
                         <Button className="flex-1" onClick={() => router.push(`/paywall?id=${result.id}`)}>
                           <CreditCard className="w-4 h-4 mr-2" />
                           Sign Up for Full Report
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card className="border-2 border-green-500">
+                    <CardHeader className="text-center">
+                      <CardTitle className="text-lg text-green-800">Analysis Complete!</CardTitle>
+                      <CardDescription>
+                        Your comprehensive AI risk assessment is now available above.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="text-center space-y-4">
+                      <div className="bg-green-50 rounded-lg p-4">
+                        <CheckCircle className="w-8 h-8 text-green-600 mx-auto mb-2" />
+                        <p className="text-green-800 font-medium">Full Report Generated</p>
+                        <p className="text-sm text-green-700">Your complete analysis includes detailed recommendations and action items.</p>
+                      </div>
+                      <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+                        <Button variant="outline" className="flex-1" onClick={() => router.push('/dashboard')}>
+                          View All Reports
+                        </Button>
+                        <Button className="flex-1" onClick={() => router.push('/')}>
+                          Back to Home
                         </Button>
                       </div>
                     </CardContent>
