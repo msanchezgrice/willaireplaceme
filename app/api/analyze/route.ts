@@ -96,25 +96,9 @@ export async function POST(req: NextRequest) {
     const prompt = analysisPrompt(JSON.stringify(evidence), enhancedProfile);
     console.log('📄 [Analyze API] Enhanced prompt length:', prompt.length);
 
-    console.log('🚀 [Analyze API] Calling OpenAI Responses API with Web Search + Structured Outputs...');
+    console.log('🚀 [Analyze API] Calling OpenAI Responses API with Web Search + Enhanced Parsing...');
     
-    // Define structured output schema for analysis response
-    const analysisSchema = {
-      type: "object",
-      properties: {
-        preview: {
-          type: "string",
-          description: "Professional preview section (maximum 300 words) with polished analysis, key findings, risk score interpretation, and actionable tip"
-        },
-        fullReport: {
-          type: "string", 
-          description: "Comprehensive markdown report with all sections: Executive Summary, Risk Assessment, Career Context Analysis, Timeline & Impact, Mitigation Strategies, 90-Day Action Plan, Skill Development Roadmap, etc."
-        }
-      },
-      required: ["preview", "fullReport"]
-    };
-
-    const analysis = await openai.responses.parse({
+    const analysis = await openai.responses.create({
       model: "gpt-4.1",
       tools: [{"type": "web_search_preview"}],
       input: [{
@@ -134,25 +118,43 @@ Use web search to find the most current information to enhance this personalized
 
 Incorporate these real-time insights into the comprehensive analysis.
 
-**OUTPUT FORMAT:**
-Return a structured response with exactly two sections:
-1. "preview" - Polished 300-word preview with key insights and risk score interpretation
-2. "fullReport" - Complete comprehensive markdown analysis with all required sections
+**REQUIRED OUTPUT FORMAT:**
+The response must contain exactly two sections separated by "---FULL_REPORT---":
 
-Both sections should incorporate current web search findings for accuracy and relevance.`
+1. PREVIEW SECTION (before the separator):
+   - Maximum 300 words
+   - Professional preview with key insights
+   - Risk score interpretation
+   - One actionable tip
+   - Inline citations using [1], [2], etc.
+
+2. FULL REPORT SECTION (after the separator):
+   - Complete comprehensive markdown analysis
+   - All required sections with web search insights
+   - Enhanced with current market data
+
+Example format:
+[Preview content here...]
+
+---FULL_REPORT---
+
+[Full comprehensive report here...]
+
+Ensure both sections incorporate current web search findings for accuracy and relevance.`
         }]
-      }],
-      output_schema: analysisSchema
+      }]
     });
 
-    console.log('✅ [Analyze API] OpenAI response received with structured outputs');
+    console.log('✅ [Analyze API] OpenAI response received with web search + enhanced parsing');
 
-    if (!analysis.output_parsed) {
-      console.error('❌ [Analyze API] No structured output received from analysis');
-      return NextResponse.json({ error: 'No structured analysis response received' }, { status: 500 });
+    const responseContent = analysis.output_text;
+    if (!responseContent) {
+      console.error('❌ [Analyze API] No response content received from analysis');
+      return NextResponse.json({ error: 'No analysis response received' }, { status: 500 });
     }
 
-    const { preview, fullReport }: { preview: string; fullReport: string } = analysis.output_parsed;
+    console.log('🔧 [Analyze API] Splitting response into preview and full report...');
+    const [preview, fullReport] = responseContent.split('---FULL_REPORT---');
     console.log('📄 [Analyze API] Preview length:', preview?.length);
     console.log('📄 [Analyze API] Full report length:', fullReport?.length);
 
