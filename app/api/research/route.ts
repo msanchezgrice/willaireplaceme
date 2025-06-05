@@ -27,13 +27,68 @@ function sanitizeText(text: string): string {
     .substring(0, 50000);
 }
 
-// Function to analyze LinkedIn profile using Responses API with web search
+// Function to analyze LinkedIn profile using Responses API with structured outputs
 async function analyzeLinkedInProfile(openai: OpenAI, linkedinUrl: string): Promise<any> {
-  console.log('🔗 [Research API] Analyzing LinkedIn profile with Responses API + Web Search:', linkedinUrl);
+  console.log('🔗 [Research API] Analyzing LinkedIn profile with Responses API + Structured Outputs:', linkedinUrl);
   
   try {
-    // Use Responses API with web search tool for LinkedIn analysis
-    const linkedinAnalysis = await openai.responses.create({
+    // Define structured output schema for LinkedIn profile data
+    const linkedinSchema = {
+      type: "object",
+      properties: {
+        currentTitle: {
+          type: "string",
+          description: "Current job title from profile"
+        },
+        company: {
+          type: "string", 
+          description: "Current company name"
+        },
+        yearsExperience: {
+          type: "string",
+          description: "Calculated total years based on work history"
+        },
+        skills: {
+          type: "array",
+          items: { type: "string" },
+          description: "Technical skills, soft skills, and tools listed"
+        },
+        dailyTasks: {
+          type: "string",
+          description: "Inferred daily responsibilities from role descriptions"
+        },
+        industry: {
+          type: "string",
+          description: "Industry/sector"
+        },
+        education: {
+          type: "string",
+          description: "Education background from profile"
+        },
+        careerProgression: {
+          type: "string",
+          description: "Analysis of career growth pattern"
+        },
+        experience: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              title: { type: "string" },
+              company: { type: "string" },
+              duration: { type: "string" },
+              description: { type: "string" }
+            },
+            required: ["title", "company", "duration", "description"]
+          },
+          description: "Work experience history"
+        }
+      },
+      required: ["currentTitle", "company", "yearsExperience", "skills", "dailyTasks", "industry", "education", "careerProgression", "experience"]
+    };
+
+    // Use Responses API with structured outputs for guaranteed JSON
+    const linkedinAnalysis = await openai.responses.parse({
       model: "gpt-4.1",
       tools: [{"type": "web_search_preview"}],
       input: [{
@@ -42,27 +97,7 @@ async function analyzeLinkedInProfile(openai: OpenAI, linkedinUrl: string): Prom
           type: "input_text",
           text: `Analyze this LinkedIn profile and extract professional information: ${linkedinUrl}
 
-Please search the web and visit this LinkedIn profile URL to extract:
-
-**Required Information (JSON format):**
-{
-  "currentTitle": "current job title from profile",
-  "company": "current company name", 
-  "yearsExperience": "calculated total years based on work history",
-  "skills": ["technical skills", "soft skills", "tools listed"],
-  "dailyTasks": "inferred daily responsibilities from role descriptions",
-  "industry": "industry/sector",
-  "education": "education background from profile",
-  "careerProgression": "analysis of career growth pattern",
-  "experience": [
-    {
-      "title": "job title",
-      "company": "company name",
-      "duration": "time period",
-      "description": "role description and key responsibilities"
-    }
-  ]
-}
+Please search the web and visit this LinkedIn profile URL to extract comprehensive professional data.
 
 **Instructions:**
 1. Use web search to access the LinkedIn profile URL directly
@@ -70,93 +105,25 @@ Please search the web and visit this LinkedIn profile URL to extract:
 3. Calculate years of experience based on work history timeline
 4. Infer daily tasks from job descriptions and industry knowledge
 5. Only include information that you can verify from the profile
-6. Mark unavailable information as "not available"
+6. For unavailable information, use "not available" as the value
 
-Return ONLY the JSON object with extracted data.`
+Provide a complete professional analysis based on the structured format required.`
         }]
-      }]
+      }],
+      output_schema: linkedinSchema
     });
 
-    const responseContent = linkedinAnalysis.output_text;
-    if (!responseContent) {
-      throw new Error('Empty response from LinkedIn analysis');
-    }
-
-    try {
-      // Try to parse JSON response directly first
-      const profileData = JSON.parse(responseContent);
-      console.log('✅ [Research API] LinkedIn profile analyzed successfully with web search');
-      return profileData;
-    } catch (parseError) {
-      console.error('❌ [Research API] Failed to parse LinkedIn analysis:', parseError);
-      console.log('📄 [Research API] Raw response (first 1000 chars):', responseContent.substring(0, 1000));
-      
-      // Enhanced JSON extraction - try multiple patterns
-      let extractedJson = null;
-      
-      // Pattern 1: Look for JSON blocks in markdown code blocks
-      const codeBlockMatch = responseContent.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
-      if (codeBlockMatch) {
-        try {
-          extractedJson = JSON.parse(codeBlockMatch[1]);
-          console.log('✅ [Research API] Extracted JSON from markdown code block');
-          return extractedJson;
-        } catch (codeBlockError) {
-          console.log('⚠️ [Research API] Failed to parse JSON from code block');
-        }
-      }
-      
-      // Pattern 2: Look for the largest JSON object in the text
-      const jsonMatches = responseContent.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g);
-      if (jsonMatches) {
-        // Try each match, starting with the longest
-        const sortedMatches = jsonMatches.sort((a, b) => b.length - a.length);
-        for (const match of sortedMatches) {
-          try {
-            extractedJson = JSON.parse(match);
-            console.log('✅ [Research API] Extracted JSON from text pattern');
-            return extractedJson;
-          } catch (matchError) {
-            // Continue to next match
-          }
-        }
-      }
-      
-      // Pattern 3: Try to extract JSON after removing common prefixes/suffixes
-      const cleanedContent = responseContent
-        .replace(/^[\s\S]*?(?=\{)/, '') // Remove everything before first {
-        .replace(/\}(?![^{}]*\{)[\s\S]*$/, '}') // Remove everything after last }
-        .trim();
-        
-      if (cleanedContent.startsWith('{') && cleanedContent.endsWith('}')) {
-        try {
-          extractedJson = JSON.parse(cleanedContent);
-          console.log('✅ [Research API] Extracted JSON after cleaning');
-          return extractedJson;
-        } catch (cleanError) {
-          console.log('⚠️ [Research API] Failed to parse cleaned JSON');
-        }
-      }
-      
-      // If all JSON parsing fails, return structured fallback with analysis
-      console.log('⚠️ [Research API] Using fallback structure with raw analysis');
-      return {
-        error: false,
-        rawAnalysis: responseContent,
-        extractedInfo: "LinkedIn profile analyzed with web search",
-        currentTitle: "See raw analysis",
-        company: "See raw analysis", 
-        yearsExperience: "See raw analysis",
-        skills: ["Analysis available in raw format"],
-        industry: "See raw analysis",
-        parseError: "Could not extract structured JSON, but analysis completed"
-      };
+    if (linkedinAnalysis.output_parsed) {
+      console.log('✅ [Research API] LinkedIn profile analyzed successfully with structured outputs');
+      return linkedinAnalysis.output_parsed;
+    } else {
+      throw new Error('No structured output received from LinkedIn analysis');
     }
   } catch (error) {
-    console.error('❌ [Research API] LinkedIn analysis with web search failed:', error);
+    console.error('❌ [Research API] LinkedIn analysis with structured outputs failed:', error);
     return {
       error: true,
-      reason: error instanceof Error ? error.message : 'Unable to analyze LinkedIn profile with web search'
+      reason: error instanceof Error ? error.message : 'Unable to analyze LinkedIn profile with structured outputs'
     };
   }
 }
@@ -463,8 +430,60 @@ export async function POST(req: NextRequest) {
         });
         console.log('📄 [Research API] Prompt length:', prompt.length);
 
-        console.log('🚀 [Research API] Calling OpenAI Responses API with Web Search...');
-        const research = await openai.responses.create({
+        console.log('🚀 [Research API] Calling OpenAI Responses API with Web Search + Structured Outputs...');
+        
+        // Define structured output schema for research data
+        const researchSchema = {
+          type: "object",
+          properties: {
+            taskFacts: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  task: { type: "string", description: "Specific task from their role" },
+                  riskLevel: { type: "string", enum: ["High", "Moderate", "Low"] },
+                  evidence: { type: "string", description: "Real AI tools/companies affecting this task" },
+                  impact: { type: "string", description: "Conservative automation percentage estimate" },
+                  timeline: { type: "string", description: "Realistic timeframe for significant impact" },
+                  sourceUrl: { type: "string", description: "Real URL if certain, otherwise 'Industry research'" },
+                  toolsExample: { type: "string", description: "Actual AI tools/platforms that exist" }
+                },
+                required: ["task", "riskLevel", "evidence", "impact", "timeline", "sourceUrl", "toolsExample"]
+              }
+            },
+            macroStats: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  statistic: { type: "string", description: "Verifiable industry data or conservative estimates" },
+                  source: { type: "string", description: "Real research organization name" },
+                  url: { type: "string", description: "Real URL if certain, otherwise 'Industry research reports'" },
+                  year: { type: "string", description: "2023 or 2024" },
+                  relevance: { type: "string", description: "How this relates to the specific role" }
+                },
+                required: ["statistic", "source", "url", "year", "relevance"]
+              }
+            },
+            industryContext: {
+              type: "object",
+              properties: {
+                overview: { type: "string", description: "2-3 sentence summary based on real AI developments" },
+                keyTrends: { 
+                  type: "array", 
+                  items: { type: "string" },
+                  description: "Array of real trends"
+                },
+                timeHorizon: { type: "string", description: "Conservative timeline for major disruption" }
+              },
+              required: ["overview", "keyTrends", "timeHorizon"]
+            }
+          },
+          required: ["taskFacts", "macroStats", "industryContext"]
+        };
+
+        const research = await openai.responses.parse({
           model: "gpt-4.1",
           tools: [{"type": "web_search_preview"}],
           input: [{
@@ -483,75 +502,26 @@ Search for:
 4. Latest job market trends and skill requirements
 5. Recent case studies of AI implementation in similar roles
 
-Provide ONLY verifiable information from your web searches. Include real URLs when available.`
+Provide ONLY verifiable information from your web searches. Include real URLs when available.
+
+Return structured data according to the defined schema with verified information only.`
             }]
-          }]
+          }],
+          output_schema: researchSchema
         });
 
-        console.log('✅ [Research API] OpenAI response received with web search');
+        console.log('✅ [Research API] OpenAI response received with structured outputs');
 
-        const responseContent = research.output_text;
-        console.log('📄 [Research API] Response content:', responseContent?.substring(0, 500) + '...');
-
-        if (!responseContent) {
-          throw new Error('Empty response from OpenAI');
+        if (!research.output_parsed) {
+          throw new Error('No structured output received from research analysis');
         }
 
-        console.log('🔧 [Research API] Parsing JSON response...');
-        let evidence;
-        try {
-          evidence = JSON.parse(responseContent);
-          console.log('✅ [Research API] JSON parsed successfully');
-          
-          // Add LinkedIn data to evidence if available
-          if (linkedinData && !linkedinData.error) {
-            evidence.linkedinProfile = linkedinData;
-          }
-        } catch (parseError) {
-          console.error('❌ [Research API] JSON parse error:', parseError);
-          console.log('📄 [Research API] Raw content that failed to parse (first 1000 chars):', responseContent.substring(0, 1000));
-          
-          // Enhanced JSON extraction for research response
-          let extractedJson = null;
-          
-          // Try to extract JSON from markdown code blocks
-          const codeBlockMatch = responseContent.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
-          if (codeBlockMatch) {
-            try {
-              extractedJson = JSON.parse(codeBlockMatch[1]);
-              console.log('✅ [Research API] Extracted research JSON from code block');
-            } catch (codeBlockError) {
-              console.log('⚠️ [Research API] Code block JSON parsing failed');
-            }
-          }
-          
-          // Try to find the largest JSON object in response
-          if (!extractedJson) {
-            const jsonMatches = responseContent.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g);
-            if (jsonMatches) {
-              const sortedMatches = jsonMatches.sort((a, b) => b.length - a.length);
-              for (const match of sortedMatches) {
-                try {
-                  extractedJson = JSON.parse(match);
-                  console.log('✅ [Research API] Extracted research JSON from text pattern');
-                  break;
-                } catch (matchError) {
-                  // Continue to next match
-                }
-              }
-            }
-          }
-          
-          if (extractedJson) {
-            evidence = extractedJson;
-            // Add LinkedIn data to evidence if available
-            if (linkedinData && !linkedinData.error) {
-              evidence.linkedinProfile = linkedinData;
-            }
-          } else {
-            console.error('❌ [Research API] Could not extract JSON from response');
-            throw parseError;
-          }
+        const evidence: any = research.output_parsed;
+        console.log('📄 [Research API] Structured evidence received');
+
+        // Add LinkedIn data to evidence if available
+        if (linkedinData && !linkedinData.error) {
+          evidence.linkedinProfile = linkedinData;
         }
 
         console.log('🔥 [Research API] Calling analyze API directly...');

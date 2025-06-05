@@ -96,12 +96,29 @@ export async function POST(req: NextRequest) {
     const prompt = analysisPrompt(JSON.stringify(evidence), enhancedProfile);
     console.log('📄 [Analyze API] Enhanced prompt length:', prompt.length);
 
-    console.log('🚀 [Analyze API] Calling OpenAI Responses API with Web Search...');
-    const analysis = await openai.responses.create({
+    console.log('🚀 [Analyze API] Calling OpenAI Responses API with Web Search + Structured Outputs...');
+    
+    // Define structured output schema for analysis response
+    const analysisSchema = {
+      type: "object",
+      properties: {
+        preview: {
+          type: "string",
+          description: "Professional preview section (maximum 300 words) with polished analysis, key findings, risk score interpretation, and actionable tip"
+        },
+        fullReport: {
+          type: "string", 
+          description: "Comprehensive markdown report with all sections: Executive Summary, Risk Assessment, Career Context Analysis, Timeline & Impact, Mitigation Strategies, 90-Day Action Plan, Skill Development Roadmap, etc."
+        }
+      },
+      required: ["preview", "fullReport"]
+    };
+
+    const analysis = await openai.responses.parse({
       model: "gpt-4.1",
       tools: [{"type": "web_search_preview"}],
       input: [{
-        role: "user",
+        role: "user", 
         content: [{
           type: "input_text",
           text: `${prompt}
@@ -115,29 +132,33 @@ Use web search to find the most current information to enhance this personalized
 4. Search for real case studies of AI implementation in this industry
 5. Find current certification programs and learning resources
 
-Incorporate these real-time insights into the comprehensive analysis to provide the most accurate and current assessment possible.`
+Incorporate these real-time insights into the comprehensive analysis.
+
+**OUTPUT FORMAT:**
+Return a structured response with exactly two sections:
+1. "preview" - Polished 300-word preview with key insights and risk score interpretation
+2. "fullReport" - Complete comprehensive markdown analysis with all required sections
+
+Both sections should incorporate current web search findings for accuracy and relevance.`
         }]
-      }]
+      }],
+      output_schema: analysisSchema
     });
 
-    console.log('✅ [Analyze API] OpenAI response received with web search capabilities');
+    console.log('✅ [Analyze API] OpenAI response received with structured outputs');
 
-    const responseContent = analysis.output_text;
-    console.log('📄 [Analyze API] Response content length:', responseContent?.length);
-
-    if (!responseContent) {
-      console.error('❌ [Analyze API] Empty response from OpenAI');
-      return NextResponse.json({ error: 'Empty analysis response' }, { status: 500 });
+    if (!analysis.output_parsed) {
+      console.error('❌ [Analyze API] No structured output received from analysis');
+      return NextResponse.json({ error: 'No structured analysis response received' }, { status: 500 });
     }
 
-    console.log('🔧 [Analyze API] Splitting response into preview and full report...');
-    const [preview, full] = responseContent.split('---FULL_REPORT---');
+    const { preview, fullReport }: { preview: string; fullReport: string } = analysis.output_parsed;
     console.log('📄 [Analyze API] Preview length:', preview?.length);
-    console.log('📄 [Analyze API] Full report length:', full?.length);
+    console.log('📄 [Analyze API] Full report length:', fullReport?.length);
 
     // Sanitize the text outputs
     const sanitizedPreview = sanitizeText(preview?.trim() || 'Analysis preview not available');
-    const sanitizedFullReport = sanitizeText(full?.trim() || 'Full report not available');
+    const sanitizedFullReport = sanitizeText(fullReport?.trim() || 'Full report not available');
 
     console.log('🧮 [Analyze API] Calculating risk score...');
     const scoreVal = score(evidence);
