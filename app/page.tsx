@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { CareerCategoryCard } from "@/components/career-category-card";
 import { RiskScoreCircle } from "@/components/risk-score-circle";
+import { Logo } from "@/components/logo";
 import { 
   Bot, 
   ChartLine, 
@@ -80,9 +81,9 @@ export default function Home() {
               <div className="flex-shrink-0">
                 <button 
                   onClick={() => router.push('/')}
-                  className="text-xl font-bold text-slate-900 hover:text-primary transition-colors"
+                  className="hover:opacity-75 transition-opacity"
                 >
-                  AICareerShield
+                  <Logo size="md" variant="light" showText={true} />
                 </button>
               </div>
             </div>
@@ -477,7 +478,9 @@ export default function Home() {
       <footer className="bg-slate-900 text-white py-8 sm:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h3 className="text-2xl font-bold mb-4">AICareerShield</h3>
+            <div className="flex justify-center mb-4">
+              <Logo size="lg" variant="dark" showText={true} />
+            </div>
             <p className="text-slate-300 mb-4">
               Protecting careers in the age of artificial intelligence
             </p>

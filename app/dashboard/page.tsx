@@ -140,7 +140,7 @@ export default function Dashboard() {
               </Button>
               <h1 className="text-xl font-bold text-slate-900">Your Dashboard</h1>
             </div>
-            <Button onClick={() => router.push('/intake')}>
+            <Button onClick={() => router.push('/intake?from=dashboard')}>
               <Plus className="w-4 h-4 mr-2" />
               New Assessment
             </Button>
@@ -262,7 +262,7 @@ export default function Dashboard() {
                 <p className="text-slate-600 mb-6">
                   Get started by creating your first AI career risk assessment.
                 </p>
-                <Button onClick={() => router.push('/intake')}>
+                <Button onClick={() => router.push('/intake?from=dashboard')}>
                   <Plus className="w-4 h-4 mr-2" />
                   Start Assessment
                 </Button>
@@ -350,7 +350,7 @@ export default function Dashboard() {
                           variant="outline" 
                           size="sm" 
                           className="w-full"
-                          onClick={() => router.push(`/report?id=${report.id}&paid=true`)}
+                          onClick={() => router.push(`/report?id=${report.id}&paid=true&from=dashboard`)}
                         >
                           View Full Report
                         </Button>

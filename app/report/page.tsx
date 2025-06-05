@@ -104,6 +104,18 @@ function ReportContent() {
 
   const reportId = searchParams.get('id');
   const isPaid = searchParams.get('paid') === 'true';
+  
+  // Get back navigation destination based on context
+  const getBackDestination = () => {
+    const from = searchParams.get('from');
+    return from === 'dashboard' ? '/dashboard' : '/';
+  };
+
+  // Get back button text based on context
+  const getBackButtonText = () => {
+    const from = searchParams.get('from');
+    return from === 'dashboard' ? 'Back to Dashboard' : 'Back to Home';
+  };
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -346,8 +358,8 @@ function ReportContent() {
             <AlertTriangle className="w-16 h-16 text-amber-500 mx-auto mb-4" />
             <h2 className="text-xl font-semibold mb-2">Report Unavailable</h2>
             <p className="text-slate-600 mb-4">{error}</p>
-            <Button onClick={() => router.push('/')}>
-              Return to Home
+            <Button onClick={() => router.push(getBackDestination())}>
+              {getBackButtonText()}
             </Button>
           </CardContent>
         </Card>
@@ -381,9 +393,9 @@ function ReportContent() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
-              <Button variant="ghost" onClick={() => router.push('/')} className="mr-4">
+              <Button variant="ghost" onClick={() => router.push(getBackDestination())} className="mr-4">
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Home
+                {getBackButtonText()}
               </Button>
               <h1 className="text-xl font-bold text-slate-900">Your AI Risk Assessment</h1>
             </div>

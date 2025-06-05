@@ -6,8 +6,56 @@ import { ClerkProvider } from '@clerk/nextjs';
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "AICareerShield - Will AI Replace Your Career?",
+  metadataBase: new URL("https://willaireplace.me"),
+  title: "Career Guard - Will AI Replace Your Career?",
   description: "Get your AI replacement risk assessment with personalized strategies to future-proof your career",
+  keywords: ["AI career risk", "career assessment", "AI replacement", "future-proof career", "career protection"],
+  authors: [{ name: "Career Guard" }],
+  creator: "Career Guard",
+  publisher: "Career Guard",
+  openGraph: {
+    title: "Career Guard - Will AI Replace Your Career?",
+    description: "Get your AI replacement risk assessment with personalized strategies to future-proof your career",
+    url: "https://willaireplace.me",
+    siteName: "Career Guard",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Career Guard - AI Career Risk Assessment",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Career Guard - Will AI Replace Your Career?",
+    description: "Get your AI replacement risk assessment with personalized strategies to future-proof your career",
+    images: ["/twitter-card.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  manifest: "/manifest.json",
+  icons: {
+    icon: [
+      { url: "/icon.png", sizes: "512x512", type: "image/png" },
+      { url: "/favicon.ico", sizes: "32x32", type: "image/x-icon" },
+    ],
+    apple: [
+      { url: "/apple-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
 };
 
 export default function RootLayout({

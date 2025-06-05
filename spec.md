@@ -1,4 +1,4 @@
-# AICareerShield MVP – Spec & Scaffold  
+# Career Guard MVP – Spec & Scaffold  
 *(single-file copy for Cursor import)*
 
 ---
@@ -240,7 +240,7 @@ chore(ci): GitHub Actions → Vercel deploy
 ⸻
 
 10. Merge instructions for your existing front-end zip
-	1.	Unzip AICareerShield.zip locally – contains /app, /public, Tailwind config.
+	1.	Unzip CareerGuard.zip locally – contains /app, /public, Tailwind config.
 	2.	Copy those folders into repo before running TL;DR Step 2.
 	3.	Keep existing tailwind.config.ts; Cursor will merge presets.
 	4.	Replace/merge package.json: keep UI deps, add backend deps.

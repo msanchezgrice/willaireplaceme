@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -58,6 +59,8 @@ interface AssessmentResult {
 
 export default function Intake() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { isSignedIn, isLoaded } = useUser();
   const [currentStep, setCurrentStep] = useState(1);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisStep, setAnalysisStep] = useState(0);
@@ -249,7 +252,7 @@ export default function Intake() {
               timeline: "2-4 years",
               previewRecommendations: reportData.preview,
               recommendations: reportData.full_report,
-              hasFullReport: !!reportData.full_report
+              hasFullReport: Boolean(isSignedIn && isLoaded) // Signed-in users get full access
             });
             
             // Move to results step and stop analysis animation
@@ -434,6 +437,18 @@ export default function Intake() {
       .join('');
   };
 
+  // Get back navigation destination based on context
+  const getBackDestination = () => {
+    const from = searchParams.get('from');
+    return from === 'dashboard' ? '/dashboard' : '/';
+  };
+
+  // Get back button text based on context
+  const getBackButtonText = () => {
+    const from = searchParams.get('from');
+    return from === 'dashboard' ? 'Back to Dashboard' : 'Back to Home';
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -441,9 +456,9 @@ export default function Intake() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <h1 className="text-xl font-bold text-slate-900">AI Risk Assessment</h1>
-            <Button variant="ghost" onClick={() => router.push('/')}>
+            <Button variant="ghost" onClick={() => router.push(getBackDestination())}>
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Home
+              {getBackButtonText()}
             </Button>
           </div>
         </div>
@@ -797,6 +812,8 @@ export default function Intake() {
                       <Clock className="w-4 h-4 text-primary mr-2 mt-0.5 flex-shrink-0" />
                       <span>Estimated timeline: {result.timeline}</span>
                     </div>
+                    
+                    {/* Always show preview content if available */}
                     {result.previewRecommendations && (
                       <div className="mt-4 prose prose-sm max-w-none">
                         <div dangerouslySetInnerHTML={{ 
@@ -804,19 +821,34 @@ export default function Intake() {
                         }} />
                       </div>
                     )}
-                    {result.hasFullReport && result.recommendations && (
+                    
+                    {/* Show full report content for signed-in users if different from preview */}
+                    {result.hasFullReport && result.recommendations && result.recommendations !== result.previewRecommendations && (
                       <div className="mt-6">
                         <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
                           <div className="flex items-center">
                             <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
                             <span className="font-medium text-green-800">Complete Analysis Available</span>
                           </div>
-                          <p className="text-sm text-green-700 mt-1">Your full detailed report is ready with comprehensive recommendations.</p>
+                          <p className="text-sm text-green-700 mt-1">Your full detailed report with comprehensive recommendations.</p>
                         </div>
                         <div className="prose prose-sm max-w-none">
                           <div dangerouslySetInnerHTML={{ 
                             __html: renderPreview(result.recommendations)
                           }} />
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* For signed-in users, encourage them to view full report even if limited content */}
+                    {result.hasFullReport && !result.recommendations && (
+                      <div className="mt-6">
+                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                          <div className="flex items-center">
+                            <Clock className="w-5 h-5 text-amber-600 mr-2" />
+                            <span className="font-medium text-amber-800">Analysis Still Processing</span>
+                          </div>
+                          <p className="text-sm text-amber-700 mt-1">Your detailed report is being generated. You can view the full analysis on your dashboard shortly.</p>
                         </div>
                       </div>
                     )}
@@ -848,7 +880,7 @@ export default function Intake() {
                         </div>
                       </div>
                       <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
-                        <Button variant="outline" className="flex-1" onClick={() => router.push('/')}>
+                        <Button variant="outline" className="flex-1" onClick={() => router.push(getBackDestination())}>
                           Maybe Later
                         </Button>
                         <Button className="flex-1" onClick={() => router.push(`/paywall?id=${result.id}`)}>
@@ -863,21 +895,21 @@ export default function Intake() {
                     <CardHeader className="text-center">
                       <CardTitle className="text-lg text-green-800">Analysis Complete!</CardTitle>
                       <CardDescription>
-                        Your comprehensive AI risk assessment is now available above.
+                        Your comprehensive AI risk assessment is available. You can view the complete report and track your progress on your dashboard.
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="text-center space-y-4">
                       <div className="bg-green-50 rounded-lg p-4">
                         <CheckCircle className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                        <p className="text-green-800 font-medium">Full Report Generated</p>
+                        <p className="text-green-800 font-medium">Full Report Access</p>
                         <p className="text-sm text-green-700">Your complete analysis includes detailed recommendations and action items.</p>
                       </div>
                       <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
                         <Button variant="outline" className="flex-1" onClick={() => router.push('/dashboard')}>
                           View All Reports
                         </Button>
-                        <Button className="flex-1" onClick={() => router.push('/')}>
-                          Back to Home
+                        <Button className="flex-1" onClick={() => router.push(`/report?id=${result.id}&paid=true&from=intake`)}>
+                          View Full Report
                         </Button>
                       </div>
                     </CardContent>
