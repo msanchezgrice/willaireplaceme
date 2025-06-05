@@ -62,7 +62,7 @@ function PaywallContent() {
             <CardHeader className="text-center">
               <CardTitle className="text-2xl">Authentication Unavailable</CardTitle>
               <CardDescription className="text-lg">
-                We're having trouble loading the sign-in system. Please try refreshing the page.
+                We&apos;re having trouble loading the sign-in system. Please try refreshing the page.
               </CardDescription>
             </CardHeader>
             <CardContent className="text-center space-y-4">

@@ -59,6 +59,12 @@
       "namedRegex": "^/auth\\-callback(?:/)?$"
     },
     {
+      "page": "/dashboard",
+      "regex": "^/dashboard(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard(?:/)?$"
+    },
+    {
       "page": "/intake",
       "regex": "^/intake(?:/)?$",
       "routeKeys": {},

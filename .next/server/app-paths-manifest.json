@@ -6,9 +6,10 @@
   "/auth-callback/page": "app/auth-callback/page.js",
   "/sign-in/[[...sign-in]]/page": "app/sign-in/[[...sign-in]]/page.js",
   "/sign-up/[[...sign-up]]/page": "app/sign-up/[[...sign-up]]/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
   "/report/page": "app/report/page.js",
-  "/api/create-payment-intent/route": "app/api/create-payment-intent/route.js",
   "/api/payment-success/route": "app/api/payment-success/route.js",
+  "/api/create-payment-intent/route": "app/api/create-payment-intent/route.js",
   "/api/reports/[id]/route": "app/api/reports/[id]/route.js",
   "/api/analyze/route": "app/api/analyze/route.js",
   "/api/research/route": "app/api/research/route.js"
