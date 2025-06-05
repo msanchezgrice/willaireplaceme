@@ -190,11 +190,12 @@ export async function POST(req: NextRequest) {
 
     console.log('✅ [Research API] Profile created:', profile);
 
-    // Do the AI research and analysis immediately but don't wait for completion
+    // Do the AI research and analysis synchronously with timeout
     console.log('📝 [Research API] Starting AI research and analysis...');
     
-    const processAnalysis = async () => {
-      try {
+    try {
+      // Set a timeout for the entire analysis process
+      const analysisPromise = (async () => {
         console.log('📝 [Research API] Generating research prompt...');
         const prompt = researchPrompt({ 
           role: sanitizedRole, 
@@ -219,8 +220,7 @@ export async function POST(req: NextRequest) {
         console.log('📄 [Research API] Response content:', responseContent?.substring(0, 500) + '...');
 
         if (!responseContent) {
-          console.error('❌ [Research API] Empty response from OpenAI');
-          return;
+          throw new Error('Empty response from OpenAI');
         }
 
         console.log('🔧 [Research API] Parsing JSON response...');
@@ -236,11 +236,10 @@ export async function POST(req: NextRequest) {
         } catch (parseError) {
           console.error('❌ [Research API] JSON parse error:', parseError);
           console.log('📄 [Research API] Raw content that failed to parse:', responseContent);
-          return;
+          throw parseError;
         }
 
         console.log('🔥 [Research API] Calling analyze API directly...');
-        // Call analyze API directly instead of using fetch
         const analysisUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/api/analyze`;
         console.log('🎯 [Research API] Analysis URL:', analysisUrl);
         
@@ -248,27 +247,34 @@ export async function POST(req: NextRequest) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ profile_id: profile.id, evidence }),
-          signal: AbortSignal.timeout(30000) // 30 second timeout
         });
 
         if (!analysisResponse.ok) {
           const errorText = await analysisResponse.text();
           console.error('❌ [Research API] Analysis failed:', analysisResponse.status, errorText);
-          return;
+          throw new Error(`Analysis API failed: ${analysisResponse.status} ${errorText}`);
         }
 
         const result = await analysisResponse.json();
         console.log('✅ [Research API] Analysis completed successfully:', result);
-        
-      } catch (analysisError) {
-        console.error('💥 [Research API] Analysis processing error:', analysisError);
-      }
-    };
+        return result;
+      })();
 
-    // Start analysis but don't wait for it - return profile_id immediately
-    processAnalysis().catch(error => {
-      console.error('💥 [Research API] Background analysis failed:', error);
-    });
+      // Wait for analysis with 30 second timeout
+      await Promise.race([
+        analysisPromise,
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Analysis timeout after 30 seconds')), 30000)
+        )
+      ]);
+
+      console.log('✅ [Research API] Full analysis pipeline completed');
+      
+    } catch (analysisError) {
+      console.error('💥 [Research API] Analysis failed:', analysisError);
+      // Don't fail the entire request if analysis fails - user can retry
+      console.log('⚠️ [Research API] Continuing despite analysis failure');
+    }
 
     console.log('✅ [Research API] Request completed successfully');
     return NextResponse.json({ 
