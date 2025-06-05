@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { auth } from '@clerk/nextjs/server';
 import OpenAI from 'openai';
 import { researchPrompt, linkedinPrompt } from '@/server/promptTemplates';
 
@@ -103,6 +104,10 @@ export async function POST(req: NextRequest) {
   console.log('🔍 [Research API] Starting request...');
   
   try {
+    // Get the current user from Clerk
+    const { userId, sessionId } = await auth();
+    console.log('👤 [Research API] User authentication:', { userId, hasSession: !!sessionId });
+    
     const body = await req.json();
     console.log('📋 [Research API] Request body:', JSON.stringify(body, null, 2));
     
@@ -178,7 +183,8 @@ export async function POST(req: NextRequest) {
         role: sanitizedRole, 
         resume: sanitizedResume, 
         task_hours: tasks || {},
-        email: null, // We're not collecting email in the current flow
+        email: null, // Email will be fetched from Clerk if needed
+        user_id: userId, // Store Clerk user ID for linking
         // Store additional profile data as JSON
         profile_data: profileData ? {
           careerCategory: profileData.careerCategory,

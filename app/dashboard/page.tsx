@@ -14,7 +14,8 @@ import {
   AlertTriangle,
   Calendar,
   TrendingUp,
-  FileText
+  FileText,
+  Linkedin
 } from "lucide-react";
 
 // Prevent static generation for this page
@@ -26,6 +27,13 @@ interface UserReport {
   created_at: string;
   profile: {
     role: string;
+    careerCategory?: string;
+    yearsExperience?: string;
+    companySize?: string;
+    dailyWorkSummary?: string;
+    keySkills?: string;
+    linkedinUrl?: string;
+    hasLinkedinData?: boolean;
   };
 }
 
@@ -34,6 +42,7 @@ export default function Dashboard() {
   const { isSignedIn, isLoaded, user } = useUser();
   const [reports, setReports] = useState<UserReport[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -43,9 +52,28 @@ export default function Dashboard() {
       return;
     }
 
-    // TODO: Fetch user's reports from API
-    // For now, we'll show a placeholder
-    setLoading(false);
+    // Fetch user's reports from API
+    const fetchReports = async () => {
+      try {
+        console.log('📊 [Dashboard] Fetching user reports...');
+        const response = await fetch('/api/user-reports');
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch reports: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('✅ [Dashboard] Reports fetched:', data.reports?.length || 0);
+        setReports(data.reports || []);
+      } catch (err) {
+        console.error('❌ [Dashboard] Error fetching reports:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load reports');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchReports();
   }, [isSignedIn, isLoaded, router]);
 
   const getRiskLevel = (score: number) => {
@@ -60,6 +88,40 @@ export default function Dashboard() {
         <div className="text-center">
           <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
           <p className="text-slate-600">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <div className="bg-white border-b border-slate-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              <div className="flex items-center">
+                <Button variant="ghost" onClick={() => router.push('/')} className="mr-4">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Home
+                </Button>
+                <h1 className="text-xl font-bold text-slate-900">Your Dashboard</h1>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <Card className="max-w-md mx-auto text-center">
+            <CardContent className="p-8">
+              <AlertTriangle className="w-16 h-16 text-amber-500 mx-auto mb-4" />
+              <h2 className="text-xl font-semibold mb-2">Unable to Load Reports</h2>
+              <p className="text-slate-600 mb-4">{error}</p>
+              <Button onClick={() => window.location.reload()}>
+                Try Again
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
@@ -134,6 +196,25 @@ export default function Dashboard() {
                             <Calendar className="w-4 h-4 mr-1" />
                             {new Date(report.created_at).toLocaleDateString()}
                           </CardDescription>
+                          
+                          {/* Enhanced Profile Information */}
+                          <div className="mt-3 space-y-1 text-xs text-slate-600">
+                            {report.profile.careerCategory && (
+                              <div>Category: {report.profile.careerCategory}</div>
+                            )}
+                            {report.profile.yearsExperience && (
+                              <div>Experience: {report.profile.yearsExperience}</div>
+                            )}
+                            {report.profile.companySize && (
+                              <div>Company: {report.profile.companySize}</div>
+                            )}
+                            {report.profile.hasLinkedinData && (
+                              <div className="flex items-center text-blue-600">
+                                <Linkedin className="w-3 h-3 mr-1" />
+                                LinkedIn analyzed
+                              </div>
+                            )}
+                          </div>
                         </div>
                         <RiskScoreCircle score={report.score} size={60} />
                       </div>
@@ -147,17 +228,45 @@ export default function Dashboard() {
                           <AlertTriangle className="w-3 h-3 mr-1" />
                           {riskLevel.label}
                         </Badge>
-                        <div className="flex items-center justify-between text-sm">
+                        
+                        {/* Daily Work Summary Preview */}
+                        {report.profile.dailyWorkSummary && (
+                          <div className="text-xs text-slate-600">
+                            <div className="font-medium mb-1">Daily Work:</div>
+                            <div className="overflow-hidden" style={{ 
+                              display: '-webkit-box',
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: 'vertical'
+                            }}>
+                              {report.profile.dailyWorkSummary.substring(0, 100)}
+                              {report.profile.dailyWorkSummary.length > 100 && '...'}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Key Skills */}
+                        {report.profile.keySkills && (
+                          <div className="text-xs text-slate-600">
+                            <div className="font-medium mb-1">Key Skills:</div>
+                            <div className="truncate">
+                              {report.profile.keySkills.substring(0, 80)}
+                              {report.profile.keySkills.length > 80 && '...'}
+                            </div>
+                          </div>
+                        )}
+                        
+                        <div className="flex items-center justify-between text-sm pt-2 border-t">
                           <span className="text-slate-600">Risk Score</span>
                           <span className="font-semibold">{report.score}/100</span>
                         </div>
+                        
                         <Button 
                           variant="outline" 
                           size="sm" 
                           className="w-full"
                           onClick={() => router.push(`/report?id=${report.id}&paid=true`)}
                         >
-                          View Report
+                          View Full Report
                         </Button>
                       </div>
                     </CardContent>

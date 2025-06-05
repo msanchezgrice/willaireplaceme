@@ -6,6 +6,7 @@ drop table if exists profiles;
 create table profiles (
   id uuid primary key default gen_random_uuid(),
   email text,
+  user_id text, -- Clerk user ID for linking profiles to users
   role text not null,
   resume text,
   task_hours jsonb,
