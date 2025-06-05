@@ -112,15 +112,27 @@ export default function Intake() {
       console.log('🔗 [Frontend] LinkedIn URL:', data.linkedinUrl);
 
       let resumeContent = data.dailyWorkSummary;
+      let fileData = null;
+      
       if (uploadedFile) {
-        console.log('📖 [Frontend] Reading uploaded file...');
+        console.log('📖 [Frontend] Processing uploaded file...');
         try {
-          resumeContent = await uploadedFile.text();
-          console.log('✅ [Frontend] File read successfully, length:', resumeContent.length);
+          const fileContent = await fileToText(uploadedFile);
+          fileData = {
+            name: uploadedFile.name,
+            type: uploadedFile.type,
+            content: fileContent,
+            size: uploadedFile.size
+          };
+          console.log('✅ [Frontend] File processed successfully');
+          
+          // For text files, also use as resume content
+          if (uploadedFile.type === 'text/plain') {
+            resumeContent = fileContent;
+          }
         } catch (fileError) {
-          console.error('❌ [Frontend] Error reading file:', fileError);
-          console.log('📄 [Frontend] Falling back to daily work summary');
-          resumeContent = data.dailyWorkSummary;
+          console.error('❌ [Frontend] Error processing file:', fileError);
+          console.log('📄 [Frontend] Continuing without file data');
         }
       }
 
@@ -129,10 +141,12 @@ export default function Intake() {
         tasks: taskHours,
         resume: resumeContent,
         linkedinUrl: data.linkedinUrl || null,
+        uploadedFile: fileData, // Send processed file data
         profileData: {
           careerCategory: data.careerCategory,
           yearsExperience: data.yearsExperience,
           companySize: data.companySize,
+          dailyWorkSummary: data.dailyWorkSummary,
           keySkills: data.keySkills
         }
       };
@@ -142,7 +156,8 @@ export default function Intake() {
         role: requestBody.role,
         tasks: requestBody.tasks,
         resume_length: requestBody.resume.length,
-        hasLinkedin: !!requestBody.linkedinUrl
+        hasLinkedin: !!requestBody.linkedinUrl,
+        hasUploadedFile: !!requestBody.uploadedFile
       });
 
       // Add timeout to the fetch request
@@ -285,6 +300,37 @@ export default function Intake() {
       } else {
         alert('Please upload a PDF, DOC, DOCX, or TXT file');
       }
+    }
+  };
+
+  // Function to convert file to base64 for backend processing
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const result = reader.result as string;
+        // Remove the data URL prefix to get just the base64 content
+        const base64Content = result.split(',')[1];
+        resolve(base64Content);
+      };
+      reader.onerror = error => reject(error);
+    });
+  };
+
+  // Function to convert file to text (for text files) or get readable content
+  const fileToText = async (file: File): Promise<string> => {
+    if (file.type === 'text/plain') {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsText(file);
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = error => reject(error);
+      });
+    } else {
+      // For PDFs and other documents, we'll send the base64 content
+      // and let the backend process it with OpenAI
+      return await fileToBase64(file);
     }
   };
 

@@ -1,49 +1,60 @@
-export const researchPrompt = ({ role, tasks, resume }: any) => `
-You are an AI researcher conducting a comprehensive analysis of AI automation risk for the role: ${role}.
+export const researchPrompt = ({ role, tasks, resume, linkedinData, profileData }: any) => `
+You are an AI researcher conducting comprehensive analysis of AI automation risk for: ${role}.
 
 **ROLE CONTEXT:**
 - Position: ${role}
 - Weekly task breakdown: ${JSON.stringify(tasks)}
 - Professional background: ${resume?.slice(0, 800)}
+${linkedinData ? `- LinkedIn Analysis: ${JSON.stringify(linkedinData)}` : ''}
+${profileData ? `- Additional Profile Data: ${JSON.stringify(profileData)}` : ''}
+
+**CRITICAL REQUIREMENT: REAL SOURCES ONLY**
+You must ONLY reference verifiable sources that actually exist. Do not create fake URLs, company names, or statistics. If you cannot find current information, state that research is limited and focus on general AI automation trends you know are accurate.
 
 **RESEARCH REQUIREMENTS:**
 For each major task category, provide:
-1. **Risk Assessment**: High (actively being automated) | Moderate (tools emerging) | Low (human-centric)
-2. **Evidence**: Specific AI tools, companies, or research directly relevant to this task
-3. **Timeline**: When automation might significantly impact this task
-4. **Source URLs**: Verifiable links to recent developments (2023-2024 preferred)
+1. **Risk Assessment**: High (actively automated) | Moderate (tools emerging) | Low (human-centric)
+2. **Evidence**: Real AI tools/companies you know exist (OpenAI, Anthropic, Microsoft, Google, etc.)
+3. **Timeline**: Conservative estimates based on actual technology progress
+4. **Sources**: ONLY real URLs you're certain exist, or reference organization names without URLs
 
-**OUTPUT FORMAT:**
-Return ONLY valid JSON in this exact structure:
+**ACCEPTABLE REAL SOURCES:**
+- OpenAI, Anthropic, Microsoft, Google official announcements
+- McKinsey Global Institute, MIT Technology Review, Stanford AI Index
+- Bureau of Labor Statistics, World Economic Forum reports
+- Major tech publications (TechCrunch, Wired, MIT Technology Review)
+- If uncertain about URLs, use format: "Organization Name Research" instead
+
+**OUTPUT FORMAT - RETURN VALID JSON ONLY:**
 {
   "taskFacts": [
     {
-      "task": "specific task name",
+      "task": "specific task from their role",
       "riskLevel": "High|Moderate|Low", 
-      "evidence": "detailed description of AI tools/developments affecting this task",
-      "impact": "percentage or description of potential automation",
-      "timeline": "estimated timeframe for significant impact",
-      "sourceUrl": "verifiable URL",
-      "toolsExample": "specific AI tools/platforms mentioned"
+      "evidence": "real AI tools/companies affecting this (actual names only)",
+      "impact": "conservative automation percentage estimate",
+      "timeline": "realistic timeframe for significant impact",
+      "sourceUrl": "real URL only if certain it exists, otherwise 'Industry research'",
+      "toolsExample": "actual AI tools/platforms you know exist"
     }
   ],
   "macroStats": [
     {
-      "statistic": "industry-wide AI adoption or job impact data",
-      "source": "research organization or credible publication",
-      "url": "source URL",
+      "statistic": "verifiable industry data or conservative estimates",
+      "source": "real research organization name",
+      "url": "real URL only if certain, otherwise 'Industry research reports'",
       "year": "2023 or 2024",
       "relevance": "how this relates to the specific role"
     }
   ],
   "industryContext": {
-    "overview": "2-3 sentence summary of AI impact in this industry",
-    "keyTrends": ["trend1", "trend2", "trend3"],
-    "timeHorizon": "overall timeline for major disruption in this field"
+    "overview": "2-3 sentence summary based on real AI developments",
+    "keyTrends": ["real trend 1", "real trend 2", "real trend 3"],
+    "timeHorizon": "conservative timeline for major disruption"
   }
 }
 
-Focus on concrete, recent developments with credible sources. Avoid speculation.`;
+Focus on concrete developments with real companies/tools. Be conservative with estimates. Quality over quantity - fewer real sources is better than many fake ones.`;
 
 export const analysisPrompt = (json: string, userProfile?: any) => `
 You are an expert AI risk analyst conducting a comprehensive, personalized career assessment. Use O3-style step-by-step reasoning to analyze this specific professional's unique situation.

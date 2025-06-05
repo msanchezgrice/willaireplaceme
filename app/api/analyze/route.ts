@@ -96,18 +96,33 @@ export async function POST(req: NextRequest) {
     const prompt = analysisPrompt(JSON.stringify(evidence), enhancedProfile);
     console.log('📄 [Analyze API] Enhanced prompt length:', prompt.length);
 
-    console.log('🚀 [Analyze API] Calling OpenAI API (gpt-4o model)...');
-    // Use gpt-4o instead of o3 for now since o3 might not be available
-    const analysis = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      temperature: 0,
-      messages: [{ role: 'system', content: prompt }]
+    console.log('🚀 [Analyze API] Calling OpenAI Responses API with Web Search...');
+    const analysis = await openai.responses.create({
+      model: "gpt-4.1",
+      tools: [{"type": "web_search_preview"}],
+      input: [{
+        role: "user",
+        content: [{
+          type: "input_text",
+          text: `${prompt}
+
+**ENHANCED ANALYSIS WITH WEB SEARCH:**
+Use web search to find the most current information to enhance this personalized career risk analysis:
+
+1. Search for latest 2024-2025 developments in AI automation for: "${enhancedProfile.role}"
+2. Find recent salary and job market trends for this role
+3. Look up current skills in demand for career advancement
+4. Search for real case studies of AI implementation in this industry
+5. Find current certification programs and learning resources
+
+Incorporate these real-time insights into the comprehensive analysis to provide the most accurate and current assessment possible.`
+        }]
+      }]
     });
 
-    console.log('✅ [Analyze API] OpenAI response received');
-    console.log('📊 [Analyze API] Response usage:', analysis.usage);
+    console.log('✅ [Analyze API] OpenAI response received with web search capabilities');
 
-    const responseContent = analysis.choices[0].message.content;
+    const responseContent = analysis.output_text;
     console.log('📄 [Analyze API] Response content length:', responseContent?.length);
 
     if (!responseContent) {

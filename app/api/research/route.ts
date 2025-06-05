@@ -27,76 +27,253 @@ function sanitizeText(text: string): string {
     .substring(0, 50000);
 }
 
-// Function to analyze LinkedIn profile using web browsing
+// Function to analyze LinkedIn profile using Responses API with web search
 async function analyzeLinkedInProfile(openai: OpenAI, linkedinUrl: string): Promise<any> {
-  console.log('🔗 [Research API] Analyzing LinkedIn profile:', linkedinUrl);
+  console.log('🔗 [Research API] Analyzing LinkedIn profile with Responses API + Web Search:', linkedinUrl);
   
   try {
-    // Use GPT-4 with web browsing to analyze LinkedIn profile
-    const linkedinAnalysis = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      temperature: 0.1,
-      messages: [
-        {
-          role: 'system',
-          content: `You are a professional profile analyzer. I will give you a LinkedIn URL and you need to extract professional information from it. 
+    // Use Responses API with web search tool for LinkedIn analysis
+    const linkedinAnalysis = await openai.responses.create({
+      model: "gpt-4.1",
+      tools: [{"type": "web_search_preview"}],
+      input: [{
+        role: "user",
+        content: [{
+          type: "input_text",
+          text: `Analyze this LinkedIn profile and extract professional information: ${linkedinUrl}
 
-Extract the following information:
-- Current job title and company
-- Years of experience (estimate from career progression)
-- Key skills and technologies
-- Daily responsibilities (infer from job titles and descriptions)
-- Industry and functional area
-- Education background
-- Career progression pattern
+Please search the web and visit this LinkedIn profile URL to extract:
 
-Return the information in a structured JSON format like this:
+**Required Information (JSON format):**
 {
-  "currentTitle": "job title",
-  "company": "company name",
-  "yearsExperience": "estimated years",
-  "skills": ["skill1", "skill2"],
-  "dailyTasks": "inferred daily responsibilities",
-  "industry": "industry sector",
-  "education": "education background",
-  "careerProgression": "career trajectory analysis"
+  "currentTitle": "current job title from profile",
+  "company": "current company name", 
+  "yearsExperience": "calculated total years based on work history",
+  "skills": ["technical skills", "soft skills", "tools listed"],
+  "dailyTasks": "inferred daily responsibilities from role descriptions",
+  "industry": "industry/sector",
+  "education": "education background from profile",
+  "careerProgression": "analysis of career growth pattern",
+  "experience": [
+    {
+      "title": "job title",
+      "company": "company name",
+      "duration": "time period",
+      "description": "role description and key responsibilities"
+    }
+  ]
 }
 
-If you cannot access the profile or extract information, return {"error": "Unable to analyze profile", "reason": "explanation"}.`
-        },
-        {
-          role: 'user',
-          content: `Please analyze this LinkedIn profile and extract professional information: ${linkedinUrl}`
-        }
-      ]
+**Instructions:**
+1. Use web search to access the LinkedIn profile URL directly
+2. Extract comprehensive professional information visible on the profile
+3. Calculate years of experience based on work history timeline
+4. Infer daily tasks from job descriptions and industry knowledge
+5. Only include information that you can verify from the profile
+6. Mark unavailable information as "not available"
+
+Return ONLY the JSON object with extracted data.`
+        }]
+      }]
     });
 
-    const responseContent = linkedinAnalysis.choices[0].message.content;
+    const responseContent = linkedinAnalysis.output_text;
     if (!responseContent) {
       throw new Error('Empty response from LinkedIn analysis');
     }
 
     try {
+      // Try to parse JSON response
       const profileData = JSON.parse(responseContent);
-      console.log('✅ [Research API] LinkedIn profile analyzed successfully');
+      console.log('✅ [Research API] LinkedIn profile analyzed successfully with web search');
       return profileData;
     } catch (parseError) {
       console.error('❌ [Research API] Failed to parse LinkedIn analysis:', parseError);
-      console.log('📄 [Research API] Raw response:', responseContent);
+      console.log('📄 [Research API] Raw response:', responseContent.substring(0, 500));
       
-      // Return the raw text if JSON parsing fails
+      // Try to extract JSON from response text
+      const jsonMatch = responseContent.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          const extractedData = JSON.parse(jsonMatch[0]);
+          console.log('✅ [Research API] Extracted JSON from response text');
+          return extractedData;
+        } catch (extractError) {
+          console.error('❌ [Research API] Failed to extract JSON from response');
+        }
+      }
+      
+      // Return structured fallback with raw analysis
       return {
         error: false,
         rawAnalysis: responseContent,
-        extractedInfo: "LinkedIn profile analysis completed but in text format"
+        extractedInfo: "LinkedIn profile analyzed with web search but needs manual parsing",
+        currentTitle: "Available in raw analysis",
+        company: "Available in raw analysis",
+        yearsExperience: "Available in raw analysis"
       };
     }
   } catch (error) {
-    console.error('❌ [Research API] LinkedIn analysis failed:', error);
+    console.error('❌ [Research API] LinkedIn analysis with web search failed:', error);
     return {
       error: true,
-      reason: error instanceof Error ? error.message : 'Unknown error during LinkedIn analysis'
+      reason: error instanceof Error ? error.message : 'Unable to analyze LinkedIn profile with web search'
     };
+  }
+}
+
+// Function to process uploaded file using OpenAI File Search with Vector Stores
+async function processUploadedFile(openai: OpenAI, fileContent: string, fileName: string, fileType: string): Promise<string> {
+  console.log('📄 [Research API] Processing uploaded file with File Search API:', fileName, 'Type:', fileType);
+  
+  try {
+    // If the file is plain text, return it directly
+    if (fileType === 'text/plain') {
+      console.log('✅ [Research API] Text file processed directly');
+      return fileContent;
+    }
+
+    // For PDFs and other documents, use the advanced File Search approach
+    const isBase64 = !fileContent.includes('\n') && fileContent.length > 100;
+    
+    if (isBase64 && (fileType.includes('pdf') || fileType.includes('doc'))) {
+      try {
+        console.log('📤 [Research API] Creating vector store for document analysis...');
+        
+        // Create a vector store for this document
+        const vectorStore = await openai.vectorStores.create({
+          name: `career_analysis_${fileName.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}`
+        });
+        
+        console.log('✅ [Research API] Vector store created:', vectorStore.id);
+
+        // Convert base64 to buffer and create file for upload
+        const buffer = Buffer.from(fileContent, 'base64');
+        const blob = new Blob([buffer], { type: fileType });
+        const file = new File([blob], fileName, { type: fileType });
+        
+        console.log('📤 [Research API] Uploading file to OpenAI Files API...');
+        const uploadedFile = await openai.files.create({
+          file: file,
+          purpose: "assistants"
+        });
+        
+        console.log('✅ [Research API] File uploaded successfully, ID:', uploadedFile.id);
+
+        // Add file to vector store
+        console.log('📚 [Research API] Adding file to vector store...');
+        await openai.vectorStores.files.create(
+          vectorStore.id,
+          { file_id: uploadedFile.id }
+        );
+
+        console.log('✅ [Research API] File added to vector store successfully');
+
+        // Use file search to analyze the document
+        console.log('🔍 [Research API] Analyzing document with file search...');
+        const response = await openai.responses.create({
+          model: "gpt-4.1",
+          tools: [{
+            "type": "file_search",
+            "vector_store_ids": [vectorStore.id]
+          }],
+          input: [{
+            role: "user",
+            content: [{
+              type: "input_text",
+              text: `Analyze this professional document (${fileName}) for career risk assessment.
+
+Extract and structure the following information:
+
+**Professional Information:**
+- Personal/Contact details (name, location, email if visible)
+- Professional summary or objective
+- Current and previous job titles with companies
+- Employment history with dates and descriptions
+- Key responsibilities and achievements
+- Technical skills and tools
+- Education background (degrees, institutions, dates)
+- Certifications and professional development
+- Notable projects or accomplishments
+
+**Career Analysis:**
+- Years of total professional experience
+- Career progression pattern and growth
+- Industry expertise and functional areas
+- Leadership experience and team management
+- Key competencies and expertise areas
+
+**Format Requirements:**
+Return a comprehensive professional profile that can be used for AI automation risk analysis. Include specific details about:
+- Daily tasks and responsibilities from job descriptions
+- Technical skills and software proficiency
+- Industry knowledge and specializations
+- Career trajectory and advancement pattern
+
+Organize the information clearly with headers and bullet points for easy analysis.`
+            }]
+          }]
+        });
+
+        if (response.output_text) {
+          console.log('✅ [Research API] Document analyzed successfully with file search');
+          
+          // Cleanup: Delete the vector store after analysis (optional)
+          try {
+            await openai.vectorStores.delete(vectorStore.id);
+            console.log('🧹 [Research API] Vector store cleaned up');
+          } catch (cleanupError) {
+            console.log('⚠️ [Research API] Vector store cleanup failed:', cleanupError);
+          }
+          
+          return response.output_text;
+        }
+        
+      } catch (fileSearchError) {
+        console.error('❌ [Research API] File search processing failed:', fileSearchError);
+        // Fall back to simpler processing
+      }
+    }
+
+    // Fallback: Use text-based analysis for other content types or failures
+    if (!isBase64 || fileContent.length < 50000) {
+      console.log('📝 [Research API] Using fallback text analysis...');
+      const response = await openai.responses.create({
+        model: "gpt-4.1",
+        input: [{
+          role: "user",
+          content: [{
+            type: "input_text",
+            text: `Extract and structure professional information from this document content:
+
+Filename: ${fileName}
+Type: ${fileType}
+Content: ${fileContent.substring(0, 12000)}
+
+Extract:
+- Professional Summary
+- Work Experience with dates and descriptions
+- Education and certifications
+- Skills and Technologies
+- Achievements and projects
+
+Format as a structured professional profile for career risk analysis.`
+          }]
+        }]
+      });
+
+      if (response.output_text) {
+        console.log('✅ [Research API] File content processed with fallback analysis');
+        return response.output_text;
+      }
+    }
+
+    console.log('⚠️ [Research API] No content extracted from file');
+    return `Professional document uploaded: ${fileName} (${fileType}) - File uploaded but detailed analysis not available`;
+    
+  } catch (error) {
+    console.error('❌ [Research API] File processing failed:', error);
+    return `Professional document uploaded: ${fileName} (${fileType}) - Processing error occurred`;
   }
 }
 
@@ -111,7 +288,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     console.log('📋 [Research API] Request body:', JSON.stringify(body, null, 2));
     
-    const { role, tasks, resume, linkedinUrl, profileData } = body;
+    const { role, tasks, resume, linkedinUrl, profileData, uploadedFile } = body;
 
     // Validate required fields
     if (!role) {
@@ -139,6 +316,31 @@ export async function POST(req: NextRequest) {
       apiKey: process.env.OPENAI_API_KEY,
       timeout: 15000 // Shorter timeout for faster response
     });
+
+    // Process uploaded file if provided
+    if (uploadedFile && uploadedFile.content && uploadedFile.name) {
+      console.log('📄 [Research API] Processing uploaded file:', uploadedFile.name);
+      try {
+        const processedFileContent = await processUploadedFile(
+          openai, 
+          uploadedFile.content, 
+          uploadedFile.name,
+          uploadedFile.type
+        );
+        
+        if (processedFileContent && processedFileContent !== uploadedFile.content) {
+          // Replace or enhance the resume with processed file content
+          sanitizedResume = processedFileContent;
+          console.log('📏 [Research API] Resume enhanced with processed file content, length:', sanitizedResume.length);
+        } else if (uploadedFile.content.length > sanitizedResume.length) {
+          // If processing didn't improve content but file has more content, use it
+          sanitizedResume = sanitizeText(uploadedFile.content);
+          console.log('📏 [Research API] Using raw file content as resume, length:', sanitizedResume.length);
+        }
+      } catch (fileError) {
+        console.log('⚠️ [Research API] File processing failed, continuing with original resume:', fileError);
+      }
+    }
 
     // LinkedIn Profile Analysis (with timeout)
     let linkedinData = null;
@@ -222,17 +424,34 @@ export async function POST(req: NextRequest) {
         });
         console.log('📄 [Research API] Prompt length:', prompt.length);
 
-        console.log('🚀 [Research API] Calling OpenAI API...');
-        const research = await openai.chat.completions.create({
-          model: 'gpt-4o',
-          temperature: 0.2,
-          messages: [{ role: 'system', content: prompt }]
+        console.log('🚀 [Research API] Calling OpenAI Responses API with Web Search...');
+        const research = await openai.responses.create({
+          model: "gpt-4.1",
+          tools: [{"type": "web_search_preview"}],
+          input: [{
+            role: "user",
+            content: [{
+              type: "input_text",
+              text: `${prompt}
+
+**ENHANCED RESEARCH INSTRUCTIONS:**
+Use web search to find the most current information about AI automation trends affecting the role: "${sanitizedRole}"
+
+Search for:
+1. Recent AI tools and platforms launched in 2024-2025 affecting this role
+2. Current industry reports from McKinsey, MIT Technology Review, World Economic Forum
+3. Real company announcements about AI automation in this field
+4. Latest job market trends and skill requirements
+5. Recent case studies of AI implementation in similar roles
+
+Provide ONLY verifiable information from your web searches. Include real URLs when available.`
+            }]
+          }]
         });
 
-        console.log('✅ [Research API] OpenAI response received');
-        console.log('📊 [Research API] Response usage:', research.usage);
+        console.log('✅ [Research API] OpenAI response received with web search');
 
-        const responseContent = research.choices[0].message.content;
+        const responseContent = research.output_text;
         console.log('📄 [Research API] Response content:', responseContent?.substring(0, 500) + '...');
 
         if (!responseContent) {
