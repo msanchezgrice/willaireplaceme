@@ -149,14 +149,100 @@ export default function Dashboard() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        {/* Welcome Section */}
+        {/* Welcome & Profile Summary Section */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-slate-900 mb-2">
             Welcome back, {user?.firstName || 'there'}!
           </h2>
-          <p className="text-slate-600">
+          <p className="text-slate-600 mb-6">
             Track your AI career risk assessments and monitor changes over time.
           </p>
+
+          {/* User Profile Summary Cards */}
+          {reports.length > 0 && (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-slate-600">Current Role</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-lg font-semibold text-slate-900">
+                    {reports[0]?.profile.role || 'Not specified'}
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {reports[0]?.profile.careerCategory ? reports[0].profile.careerCategory.replace('-', ' ') : 'Latest assessment'}
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-slate-600">Experience Level</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-lg font-semibold text-slate-900">
+                    {reports[0]?.profile.yearsExperience || 'Not specified'}
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1">Years of experience</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-slate-600">Company Size</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-lg font-semibold text-slate-900 capitalize">
+                    {reports[0]?.profile.companySize || 'Not specified'}
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1">Organization type</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-slate-600">AI Analysis</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-lg font-semibold text-slate-900">
+                    {reports.filter(r => r.profile.hasLinkedinData).length}/{reports.length}
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1">With LinkedIn data</p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Key Skills and Work Summary for Latest Assessment */}
+          {reports.length > 0 && (reports[0]?.profile.keySkills || reports[0]?.profile.dailyWorkSummary) && (
+            <div className="grid gap-4 md:grid-cols-2 mb-6">
+              {reports[0]?.profile.keySkills && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium text-slate-600">Your Key Skills</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-slate-700 leading-relaxed">
+                      {reports[0].profile.keySkills}
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {reports[0]?.profile.dailyWorkSummary && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium text-slate-600">Your Daily Work</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-slate-700 leading-relaxed">
+                      {reports[0].profile.dailyWorkSummary}
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Reports Section */}

@@ -37,7 +37,7 @@ interface ReportData {
 
 // Markdown renderer component
 function MarkdownContent({ content }: { content: string }) {
-  // Simple markdown-to-HTML converter
+  // Enhanced markdown-to-HTML converter with better URL handling
   const renderMarkdown = (text: string) => {
     return text
       // Headers
@@ -49,25 +49,37 @@ function MarkdownContent({ content }: { content: string }) {
       .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-slate-900">$1</strong>')
       .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
       
-      // Convert URLs to clickable links
-      .replace(/https?:\/\/[^\s]+/g, (url) => {
+      // Handle markdown-style links [text](url) FIRST before URL conversion
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
+        // Clean URL and validate
+        const cleanUrl = url.trim();
+        if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://')) {
+          return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">${text}</a>`;
+        } else {
+          // If not a valid URL, treat as plain text reference
+          return `<span class="text-blue-600 font-medium">${text}</span>`;
+        }
+      })
+      
+      // Convert standalone URLs to clickable links (avoiding already processed markdown links)
+      .replace(/(?<!href="|">)https?:\/\/[^\s<]+/g, (url) => {
         // Clean up the URL (remove trailing punctuation)
-        const cleanUrl = url.replace(/[.,;:)]$/, '');
+        const cleanUrl = url.replace(/[.,;:)]+$/, '');
         const domain = cleanUrl.replace(/https?:\/\//, '').replace(/\/.*/, '');
         return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">${domain}</a>`;
       })
       
-      // Handle markdown-style links [text](url)
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">$1</a>')
-      
-      // Lists
-      .replace(/^\* (.*$)/gim, '<li class="ml-4 mb-1">• $1</li>')
-      .replace(/^\d+\. (.*$)/gim, '<li class="ml-4 mb-1 list-decimal">$1</li>')
-      
       // Handle numbered references like [1], [2], etc.
       .replace(/\[(\d+)\]/g, '<sup class="text-xs bg-blue-100 text-blue-800 px-1 py-0.5 rounded">$1</sup>')
       
-      // Line breaks
+      // Lists - improved handling
+      .replace(/^\* (.*$)/gim, '<li class="ml-4 mb-1 list-disc">$1</li>')
+      .replace(/^\d+\. (.*$)/gim, '<li class="ml-4 mb-1 list-decimal">$1</li>')
+      
+      // Handle bullet points with dashes
+      .replace(/^- (.*$)/gim, '<li class="ml-4 mb-1 list-disc">$1</li>')
+      
+      // Line breaks and paragraphs
       .replace(/\n\n/g, '</p><p class="mb-4">')
       .replace(/\n/g, '<br/>');
   };
@@ -187,26 +199,132 @@ function ReportContent() {
   const extractSection = (content: string, sectionTitle: string): string => {
     if (!content) return '';
     
-    // Create regex to match the section header and capture content until next major header
-    const sectionRegex = new RegExp(
-      `## ${sectionTitle}([\\s\\S]*?)(?=## |$)`,
-      'i'
-    );
+    // Try multiple variations of section headers
+    const sectionVariations = [
+      `## ${sectionTitle}`,
+      `### ${sectionTitle}`,
+      `## ${sectionTitle} `,
+      `### ${sectionTitle} `,
+      `## Your ${sectionTitle}`,
+      `### Your ${sectionTitle}`,
+      `## Personalized ${sectionTitle}`,
+      `### Personalized ${sectionTitle}`
+    ];
     
-    const match = content.match(sectionRegex);
-    return match ? match[1].trim() : '';
+    for (const variation of sectionVariations) {
+      const sectionRegex = new RegExp(
+        `${variation.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([\\s\\S]*?)(?=## |### |$)`,
+        'i'
+      );
+      
+      const match = content.match(sectionRegex);
+      if (match && match[1].trim().length > 50) { // Ensure substantial content
+        return match[1].trim();
+      }
+    }
+    
+    return '';
   };
 
-  // Extract 90-Day Action Plan content
+  // Extract 90-Day Action Plan content with enhanced fallbacks
   const getActionPlanContent = (fullReport: string): string => {
-    const actionPlan = extractSection(fullReport, '90-Day Action Plan');
-    return actionPlan || extractSection(fullReport, 'Action Plan') || 'Action plan content will be extracted from the full report or generated separately.';
+    // Try multiple section titles
+    const actionPlanTitles = [
+      '90-Day Action Plan',
+      'Action Plan',
+      'Your 90-Day Action Plan',
+      'Personalized Action Plan',
+      'Strategic Action Plan',
+      'Implementation Plan'
+    ];
+    
+    for (const title of actionPlanTitles) {
+      const content = extractSection(fullReport, title);
+      if (content) return content;
+    }
+    
+    // Fallback: extract any section that contains "Action" and has substantial content
+    const actionRegex = /## [^#]*Action[^#]*Plan[^#]*([\\s\\S]*?)(?=## |$)/i;
+    const actionMatch = fullReport.match(actionRegex);
+    if (actionMatch && actionMatch[1].trim().length > 100) {
+      return actionMatch[1].trim();
+    }
+    
+    return `## Phase 1: Immediate Actions (Days 1-30)
+
+**Skill Assessment & Foundation Building:**
+1. **Audit Current Skills**: Complete a comprehensive inventory of your technical and soft skills
+2. **AI Tool Familiarization**: Begin daily use of AI tools relevant to your role
+3. **Network Activation**: Connect with professionals in AI-adjacent roles
+
+## Phase 2: Skill Development (Days 31-60)
+
+**Strategic Capability Building:**
+1. **Core Competency Enhancement**: Enroll in relevant certification programs
+2. **AI Collaboration Skills**: Learn effective human-AI workflow optimization
+3. **Industry Intelligence**: Stay informed about AI developments in your field
+
+## Phase 3: Strategic Positioning (Days 61-90)
+
+**Career Future-Proofing:**
+1. **Specialized Expertise Development**: Focus on areas with lower automation risk
+2. **Strategic Networking**: Build relationships with industry leaders
+3. **Personal Brand Enhancement**: Establish thought leadership in your domain
+
+*Detailed action plan will be generated based on your specific assessment results.*`;
   };
 
-  // Extract Skill Development content  
+  // Extract Skill Development content with enhanced fallbacks
   const getSkillDevelopmentContent = (fullReport: string): string => {
-    const skillDev = extractSection(fullReport, 'Skill Development Roadmap');
-    return skillDev || extractSection(fullReport, 'Skill Development') || 'Skill development recommendations will be extracted from the full report.';
+    // Try multiple section titles
+    const skillTitles = [
+      'Skill Development Roadmap',
+      'Skill Development',
+      'Your Skill Development',
+      'Professional Development',
+      'Learning Roadmap',
+      'Career Development'
+    ];
+    
+    for (const title of skillTitles) {
+      const content = extractSection(fullReport, title);
+      if (content) return content;
+    }
+    
+    // Fallback: extract any section that contains "Skill" and has substantial content
+    const skillRegex = /## [^#]*Skill[^#]*([\\s\\S]*?)(?=## |$)/i;
+    const skillMatch = fullReport.match(skillRegex);
+    if (skillMatch && skillMatch[1].trim().length > 100) {
+      return skillMatch[1].trim();
+    }
+    
+    return `## Core Skills to Develop (Priority Order)
+
+### 1. AI Collaboration & Prompt Engineering
+- **What**: Learn to effectively work with AI tools in your daily workflow
+- **Why**: Essential for staying relevant in AI-augmented work environments
+- **Timeline**: 2-4 weeks
+- **Resources**: Online courses, hands-on practice with AI tools
+
+### 2. Strategic Thinking & Complex Problem Solving
+- **What**: Develop skills that complement AI capabilities rather than compete
+- **Why**: Human judgment and creativity remain critical differentiators
+- **Timeline**: Ongoing development
+- **Resources**: Strategic thinking frameworks, case study analysis
+
+### 3. Data Analysis & Interpretation
+- **What**: Understanding and interpreting AI-generated insights
+- **Why**: Critical for making informed decisions with AI assistance
+- **Timeline**: 4-6 weeks
+- **Resources**: Data analytics courses, visualization tools
+
+### 4. Industry-Specific Technical Skills
+- **What**: Deepen expertise in areas where human knowledge adds value
+- **Why**: Specialized knowledge becomes more valuable as AI handles routine tasks
+- **Timeline**: 3-6 months
+- **Resources**: Professional certifications, industry training programs
+
+*Detailed skill recommendations will be based on your specific role and assessment results.*`;
   };
 
   if (!isLoaded || loading) {

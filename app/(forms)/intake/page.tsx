@@ -162,7 +162,7 @@ export default function Intake() {
 
       // Add timeout to the fetch request
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minutes timeout instead of 45 seconds
 
       let response;
       let responseData;
@@ -186,9 +186,9 @@ export default function Intake() {
           
           // Handle specific error cases
           if (response.status === 504 || response.status === 408) {
-            console.log('⏰ [Frontend] Request timed out, but may be processing in background');
+            console.log('⏰ [Frontend] Request timed out, but analysis is processing in background');
             // For timeout, we'll try to recover by polling for any existing profile
-            throw new Error('Request timed out. We\'re continuing to process your assessment...');
+            throw new Error('Analysis is taking longer than expected. Your assessment is still processing...');
           }
           
           throw new Error(`Assessment submission failed: ${response.status} ${errorText}`);
@@ -202,7 +202,7 @@ export default function Intake() {
         
         if (fetchError instanceof Error && fetchError.name === 'AbortError') {
           console.log('⏰ [Frontend] Request aborted due to timeout');
-          throw new Error('Request timed out. Your assessment may still be processing...');
+          throw new Error('Analysis is taking longer than expected. Your assessment is still processing in the background...');
         }
         
         throw fetchError;

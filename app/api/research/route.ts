@@ -476,19 +476,22 @@ Return ONLY the JSON object. Do not include explanatory text before or after the
         }
 
         console.log('🔥 [Research API] Calling analyze API directly...');
-        const analysisUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/api/analyze`;
-        console.log('🎯 [Research API] Analysis URL:', analysisUrl);
         
-        const analysisResponse = await fetch(analysisUrl, {
+        // Call analyze API directly instead of HTTP fetch to avoid environment issues
+        const analyzeRequest = new NextRequest('http://localhost/api/analyze', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ profile_id: profile.id, evidence }),
         });
 
+        // Import and call analyze function directly
+        const { POST: analyzeHandler } = await import('../analyze/route');
+        const analysisResponse = await analyzeHandler(analyzeRequest);
+
         if (!analysisResponse.ok) {
           const errorText = await analysisResponse.text();
           console.error('❌ [Research API] Analysis failed:', analysisResponse.status, errorText);
-          throw new Error(`Analysis API failed: ${analysisResponse.status} ${errorText}`);
+          throw new Error(`Analysis failed: ${analysisResponse.status} ${errorText}`);
         }
 
         const result = await analysisResponse.json();
