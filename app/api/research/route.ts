@@ -5,7 +5,7 @@ import OpenAI from 'openai';
 import { researchPrompt, linkedinPrompt } from '@/server/promptTemplates';
 
 export const runtime = 'edge';
-export const maxDuration = 900; // 15 minutes for edge function
+export const maxDuration = 800; // 13.33 minutes - maximum allowed for current Vercel plan
 
 // Function to sanitize text for database insertion
 function sanitizeText(text: string): string {
