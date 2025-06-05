@@ -351,15 +351,33 @@ export default function Intake() {
     if (!content) return '';
     
     return content
-      // Remove section markers that are meant for splitting
+      // Remove all section markers and headers
       .replace(/\*\*SECTION \d+: PREVIEW\*\*/g, '')
+      .replace(/SECTION \d+: PREVIEW/g, '')
+      .replace(/\*\*PREVIEW\*\*/g, '')
+      .replace(/PREVIEW/g, '')
+      // Handle headers
+      .replace(/^### (.*$)/gim, '<h3 class="text-lg font-semibold text-slate-900 mt-4 mb-2">$1</h3>')
+      .replace(/^## (.*$)/gim, '<h2 class="text-xl font-bold text-slate-900 mt-6 mb-3">$1</h2>')
+      .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold text-slate-900 mt-6 mb-4">$1</h1>')
       // Handle bold text
       .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-slate-900">$1</strong>')
-      // Handle line breaks and paragraphs
+      // Handle bullet points
+      .replace(/^- (.*$)/gim, '<li class="ml-4 mb-1 list-disc">$1</li>')
+      .replace(/^\* (.*$)/gim, '<li class="ml-4 mb-1 list-disc">$1</li>')
+      // Handle numbered lists
+      .replace(/^\d+\. (.*$)/gim, '<li class="ml-4 mb-1 list-decimal">$1</li>')
+      // Handle line breaks and create paragraphs
       .split('\n\n')
       .map(paragraph => paragraph.trim())
-      .filter(paragraph => paragraph.length > 0)
-      .map(paragraph => `<p class="mb-3 leading-relaxed">${paragraph.replace(/\n/g, '<br/>')}</p>`)
+      .filter(paragraph => paragraph.length > 0 && !paragraph.match(/^[\s\*\-]*$/))
+      .map(paragraph => {
+        // Don't wrap list items or headers in paragraphs
+        if (paragraph.includes('<li') || paragraph.includes('<h')) {
+          return paragraph;
+        }
+        return `<div class="mb-4 leading-relaxed text-slate-700">${paragraph.replace(/\n/g, '<br/>')}</div>`;
+      })
       .join('');
   };
 

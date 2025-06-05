@@ -49,9 +49,23 @@ function MarkdownContent({ content }: { content: string }) {
       .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-slate-900">$1</strong>')
       .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
       
+      // Convert URLs to clickable links
+      .replace(/https?:\/\/[^\s]+/g, (url) => {
+        // Clean up the URL (remove trailing punctuation)
+        const cleanUrl = url.replace(/[.,;:)]$/, '');
+        const domain = cleanUrl.replace(/https?:\/\//, '').replace(/\/.*/, '');
+        return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">${domain}</a>`;
+      })
+      
+      // Handle markdown-style links [text](url)
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">$1</a>')
+      
       // Lists
       .replace(/^\* (.*$)/gim, '<li class="ml-4 mb-1">• $1</li>')
       .replace(/^\d+\. (.*$)/gim, '<li class="ml-4 mb-1 list-decimal">$1</li>')
+      
+      // Handle numbered references like [1], [2], etc.
+      .replace(/\[(\d+)\]/g, '<sup class="text-xs bg-blue-100 text-blue-800 px-1 py-0.5 rounded">$1</sup>')
       
       // Line breaks
       .replace(/\n\n/g, '</p><p class="mb-4">')
@@ -159,6 +173,13 @@ function ReportContent() {
       // Fallback: copy to clipboard
       navigator.clipboard.writeText(window.location.href);
       alert('Link copied to clipboard!');
+    }
+  };
+
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -277,15 +298,15 @@ function ReportContent() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <Button variant="outline" size="sm" className="w-full justify-start">
+                  <Button variant="outline" size="sm" className="w-full justify-start" onClick={() => scrollToSection('key-insights')}>
                     <BookOpen className="w-4 h-4 mr-2" />
                     View Executive Summary
                   </Button>
-                  <Button variant="outline" size="sm" className="w-full justify-start">
+                  <Button variant="outline" size="sm" className="w-full justify-start" onClick={() => scrollToSection('action-plan')}>
                     <Target className="w-4 h-4 mr-2" />
                     Action Plan
                   </Button>
-                  <Button variant="outline" size="sm" className="w-full justify-start">
+                  <Button variant="outline" size="sm" className="w-full justify-start" onClick={() => scrollToSection('skill-development')}>
                     <TrendingUp className="w-4 h-4 mr-2" />
                     Skill Development
                   </Button>
@@ -298,7 +319,7 @@ function ReportContent() {
           <div className="lg:col-span-3">
             <div className="space-y-6 sm:space-y-8">
               {/* Preview Section */}
-              <Card>
+              <Card id="key-insights">
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <Shield className="w-5 h-5 mr-2" />
@@ -315,20 +336,58 @@ function ReportContent() {
 
               {/* Full Report Section */}
               {isPaid && reportData.full_report && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <BookOpen className="w-5 h-5 mr-2" />
-                      Complete Analysis
-                    </CardTitle>
-                    <CardDescription>
-                      Detailed assessment with recommendations and action plan
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <MarkdownContent content={reportData.full_report} />
-                  </CardContent>
-                </Card>
+                <>
+                  <Card id="complete-analysis">
+                    <CardHeader>
+                      <CardTitle className="flex items-center">
+                        <BookOpen className="w-5 h-5 mr-2" />
+                        Complete Analysis
+                      </CardTitle>
+                      <CardDescription>
+                        Detailed assessment with recommendations and action plan
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <MarkdownContent content={reportData.full_report} />
+                    </CardContent>
+                  </Card>
+
+                  {/* Action Plan Section - Extract from full report if it contains action plan */}
+                  <Card id="action-plan">
+                    <CardHeader>
+                      <CardTitle className="flex items-center">
+                        <Target className="w-5 h-5 mr-2" />
+                        Action Plan
+                      </CardTitle>
+                      <CardDescription>
+                        Specific steps to future-proof your career
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-slate-600">
+                        Action plan content will be extracted from the full report or generated separately.
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Skill Development Section */}
+                  <Card id="skill-development">
+                    <CardHeader>
+                      <CardTitle className="flex items-center">
+                        <TrendingUp className="w-5 h-5 mr-2" />
+                        Skill Development
+                      </CardTitle>
+                      <CardDescription>
+                        Recommended skills and learning paths
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-slate-600">
+                        Skill development recommendations will be extracted from the full report.
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>
               )}
 
               {/* Upgrade CTA for non-paid users */}
