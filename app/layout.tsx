@@ -17,12 +17,22 @@ export default function RootLayout({
 }>) {
   const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
+  // Add debug logging
+  console.log('Clerk publishable key available:', !!publishableKey);
+  console.log('Clerk key prefix:', publishableKey?.substring(0, 7));
+
   if (!publishableKey) {
+    console.error('Missing NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY');
     // If no Clerk key is available (e.g., during build), render without ClerkProvider
     return (
       <html lang="en">
         <body className={`${inter.className} antialiased`}>
-          {children}
+          <div className="min-h-screen bg-background flex items-center justify-center">
+            <div className="text-center">
+              <h1 className="text-2xl font-bold text-slate-900 mb-4">Configuration Error</h1>
+              <p className="text-slate-600">Authentication is not properly configured.</p>
+            </div>
+          </div>
         </body>
       </html>
     );

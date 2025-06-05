@@ -15,6 +15,7 @@ function PaywallContent() {
   const searchParams = useSearchParams();
   const { isSignedIn, user, isLoaded } = useUser();
   const assessmentId = searchParams.get('id');
+  const [clerkError, setClerkError] = useState(false);
 
   useEffect(() => {
     // If user is already signed in, redirect to full report
@@ -23,10 +24,77 @@ function PaywallContent() {
     }
   }, [isSignedIn, assessmentId, router]);
 
+  useEffect(() => {
+    // Set a timeout to detect if Clerk isn't loading
+    const timeout = setTimeout(() => {
+      if (!isLoaded) {
+        console.error('Clerk failed to load within 10 seconds');
+        setClerkError(true);
+      }
+    }, 10000);
+
+    if (isLoaded) {
+      clearTimeout(timeout);
+    }
+
+    return () => clearTimeout(timeout);
+  }, [isLoaded]);
+
+  // Show error state if Clerk fails to load
+  if (clerkError) {
+    return (
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <div className="bg-white border-b border-slate-200">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              <h1 className="text-xl font-bold text-slate-900">Complete Your Report</h1>
+              <Button variant="ghost" onClick={() => router.back()}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <Card className="shadow-xl">
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl">Authentication Unavailable</CardTitle>
+              <CardDescription className="text-lg">
+                We're having trouble loading the sign-in system. Please try refreshing the page.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="text-center space-y-4">
+              <div className="space-y-4">
+                <Button 
+                  onClick={() => window.location.reload()} 
+                  className="w-full h-12 text-lg shadow-lg"
+                >
+                  Refresh Page
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => router.push('/')}
+                  className="w-full"
+                >
+                  Go Home
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   if (!isLoaded) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
+        <div className="text-center">
+          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-slate-600">Loading authentication...</p>
+        </div>
       </div>
     );
   }

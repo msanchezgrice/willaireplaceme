@@ -346,6 +346,23 @@ export default function Intake() {
     "Generating personalized recommendations"
   ];
 
+  // Function to render markdown preview content
+  const renderPreview = (content: string) => {
+    if (!content) return '';
+    
+    return content
+      // Remove section markers that are meant for splitting
+      .replace(/\*\*SECTION \d+: PREVIEW\*\*/g, '')
+      // Handle bold text
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-slate-900">$1</strong>')
+      // Handle line breaks and paragraphs
+      .split('\n\n')
+      .map(paragraph => paragraph.trim())
+      .filter(paragraph => paragraph.length > 0)
+      .map(paragraph => `<p class="mb-3 leading-relaxed">${paragraph.replace(/\n/g, '<br/>')}</p>`)
+      .join('');
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -710,7 +727,7 @@ export default function Intake() {
                     {result.previewRecommendations && (
                       <div className="mt-4 prose prose-sm max-w-none">
                         <div dangerouslySetInnerHTML={{ 
-                          __html: result.previewRecommendations.replace(/\n/g, '<br/>') 
+                          __html: renderPreview(result.previewRecommendations)
                         }} />
                       </div>
                     )}
