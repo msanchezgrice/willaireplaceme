@@ -18,11 +18,16 @@ function sanitizeText(text: string): string {
 
 export async function performAnalysis(profile_id: string, evidence: any) {
   console.log('🔬 [Analyze Core] Starting analysis for profile:', profile_id);
+  console.log('📊 [Analyze Core] Evidence received:', {
+    keys: Object.keys(evidence),
+    evidence_size: JSON.stringify(evidence).length
+  });
   
   const supabase = createClient(
     process.env.SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
+  console.log('📦 [Analyze Core] Supabase client created');
 
   // Fetch user profile data for personalized analysis
   console.log('👤 [Analyze Core] Fetching user profile data...');
@@ -38,6 +43,14 @@ export async function performAnalysis(profile_id: string, evidence: any) {
   }
 
   console.log('✅ [Analyze Core] Profile data fetched');
+  console.log('👤 [Analyze Core] Profile details:', {
+    id: profileData.id,
+    role: profileData.role,
+    user_id: profileData.user_id,
+    resume_length: profileData.resume?.length || 0,
+    has_linkedin_data: !!profileData.linkedin_data,
+    created_at: profileData.created_at
+  });
 
   // Prepare enhanced user profile for analysis
   const enhancedProfile = {
@@ -59,19 +72,22 @@ export async function performAnalysis(profile_id: string, evidence: any) {
     apiKey: process.env.OPENAI_API_KEY,
     timeout: 300000 // 5 minutes timeout
   });
+  console.log('✅ [Analyze Core] OpenAI client created with 5-minute timeout');
 
   console.log('📝 [Analyze Core] Generating analysis prompt...');
   const prompt = analysisPrompt(JSON.stringify(evidence), enhancedProfile);
+  console.log('📄 [Analyze Core] Analysis prompt generated, length:', prompt.length);
 
   console.log('🚀 [Analyze Core] Calling OpenAI Responses API...');
-  const analysis = await openai.responses.create({
-    model: "gpt-4.1",
-    tools: [{"type": "web_search_preview"}],
-    input: [{
-      role: "user", 
-      content: [{
-        type: "input_text",
-        text: `${prompt}
+  try {
+    const analysis = await openai.responses.create({
+      model: "gpt-4.1",
+      tools: [{"type": "web_search_preview"}],
+      input: [{
+        role: "user", 
+        content: [{
+          type: "input_text",
+          text: `${prompt}
 
 **ENHANCED ANALYSIS WITH WEB SEARCH:**
 Use web search to find the most current information to enhance this personalized career risk analysis:
@@ -105,45 +121,73 @@ Example format:
 [Full comprehensive report here...]
 
 Ensure both sections incorporate current web search findings for accuracy and relevance.`
+        }]
       }]
-    }]
-  });
+    });
 
-  console.log('✅ [Analyze Core] OpenAI response received');
+    console.log('✅ [Analyze Core] OpenAI response received');
+    console.log('📏 [Analyze Core] Response content length:', analysis.output_text?.length || 0);
 
-  const responseContent = analysis.output_text;
-  if (!responseContent) {
-    throw new Error('No analysis response received');
+    const responseContent = analysis.output_text;
+    if (!responseContent) {
+      console.error('❌ [Analyze Core] No analysis response received');
+      throw new Error('No analysis response received');
+    }
+
+    console.log('📄 [Analyze Core] Raw response content (first 200 chars):', responseContent.substring(0, 200));
+
+    console.log('🔧 [Analyze Core] Splitting response into preview and full report...');
+    const [preview, fullReport] = responseContent.split('---FULL_REPORT---');
+
+    console.log('📏 [Analyze Core] Split results:', {
+      preview_length: preview?.length || 0,
+      full_report_length: fullReport?.length || 0,
+      has_separator: responseContent.includes('---FULL_REPORT---')
+    });
+
+    // Sanitize the text outputs
+    const sanitizedPreview = sanitizeText(preview?.trim() || 'Analysis preview not available');
+    const sanitizedFullReport = sanitizeText(fullReport?.trim() || 'Full report not available');
+
+    console.log('🧮 [Analyze Core] Calculating risk score...');
+    const scoreVal = score(evidence);
+    console.log('📊 [Analyze Core] Risk score calculated:', scoreVal);
+
+    console.log('💾 [Analyze Core] Saving report to database...');
+    const { data: report, error: dbError } = await supabase
+      .from('reports')
+      .insert([{
+        profile_id,
+        score: scoreVal,
+        preview: sanitizedPreview,
+        full_report: sanitizedFullReport,
+        evidence: evidence
+      }])
+      .select()
+      .single();
+
+    if (dbError) {
+      console.error('❌ [Analyze Core] Database error:', dbError);
+      throw new Error('Database error: ' + dbError.message);
+    }
+
+    console.log('✅ [Analyze Core] Report saved successfully:', report?.id);
+    console.log('📊 [Analyze Core] Final report details:', {
+      report_id: report?.id,
+      profile_id: report?.profile_id,
+      score: report?.score,
+      preview_length: report?.preview?.length || 0,
+      full_report_length: report?.full_report?.length || 0
+    });
+    
+    return { ok: true, report_id: report?.id };
+  } catch (openaiError) {
+    console.error('💥 [Analyze Core] OpenAI API call failed:', openaiError);
+    console.error('📚 [Analyze Core] OpenAI error details:', {
+      error: openaiError instanceof Error ? openaiError.message : String(openaiError),
+      stack: openaiError instanceof Error ? openaiError.stack : 'No stack trace',
+      name: openaiError instanceof Error ? openaiError.name : 'Unknown error type'
+    });
+    throw openaiError;
   }
-
-  console.log('🔧 [Analyze Core] Splitting response into preview and full report...');
-  const [preview, fullReport] = responseContent.split('---FULL_REPORT---');
-
-  // Sanitize the text outputs
-  const sanitizedPreview = sanitizeText(preview?.trim() || 'Analysis preview not available');
-  const sanitizedFullReport = sanitizeText(fullReport?.trim() || 'Full report not available');
-
-  console.log('🧮 [Analyze Core] Calculating risk score...');
-  const scoreVal = score(evidence);
-
-  console.log('💾 [Analyze Core] Saving report to database...');
-  const { data: report, error: dbError } = await supabase
-    .from('reports')
-    .insert([{
-      profile_id,
-      score: scoreVal,
-      preview: sanitizedPreview,
-      full_report: sanitizedFullReport,
-      evidence: evidence
-    }])
-    .select()
-    .single();
-
-  if (dbError) {
-    console.error('❌ [Analyze Core] Database error:', dbError);
-    throw new Error('Database error: ' + dbError.message);
-  }
-
-  console.log('✅ [Analyze Core] Report saved successfully:', report?.id);
-  return { ok: true, report_id: report?.id };
 } 
