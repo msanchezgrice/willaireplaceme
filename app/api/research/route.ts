@@ -436,34 +436,31 @@ export async function POST(req: NextRequest) {
 
     console.log('✅ [Research API] Profile created:', profile);
 
-    // Do the AI research and analysis asynchronously in background
-    console.log('📝 [Research API] Starting AI research and analysis...');
+    // Do the AI research and analysis synchronously instead of background
+    console.log('📝 [Research API] Starting synchronous AI research and analysis...');
     
-    // Don't wait for analysis to complete - start it in background and return immediately
-    (async () => {
-      console.log('🟢 [Background Analysis] Node.js runtime background function started!');
-      try {
-        console.log('🔄 [Background Analysis] Background analysis started for profile:', profile.id);
-        console.log('📝 [Background Analysis] Generating research prompt...');
-        const prompt = researchPrompt({ 
-          role: sanitizedRole, 
-          tasks, 
-          resume: sanitizedResume,
-          linkedinData: linkedinData || null,
-          profileData: profileData || null
-        });
-        console.log('📄 [Background Analysis] Prompt length:', prompt.length);
+    try {
+      console.log('🔄 [Research API] Synchronous analysis started for profile:', profile.id);
+      console.log('📝 [Research API] Generating research prompt...');
+      const prompt = researchPrompt({ 
+        role: sanitizedRole, 
+        tasks, 
+        resume: sanitizedResume,
+        linkedinData: linkedinData || null,
+        profileData: profileData || null
+      });
+      console.log('📄 [Research API] Prompt length:', prompt.length);
 
-        console.log('🚀 [Background Analysis] Calling OpenAI Responses API with Web Search + Enhanced Parsing...');
-        
-        const research = await openai.responses.create({
-          model: "gpt-4.1",
-          tools: [{"type": "web_search_preview"}],
-          input: [{
-            role: "user",
-            content: [{
-              type: "input_text",
-              text: `${prompt}
+      console.log('🚀 [Research API] Calling OpenAI Responses API with Web Search + Enhanced Parsing...');
+      
+      const research = await openai.responses.create({
+        model: "gpt-4.1",
+        tools: [{"type": "web_search_preview"}],
+        input: [{
+          role: "user",
+          content: [{
+            type: "input_text",
+            text: `${prompt}
 
 **ENHANCED RESEARCH INSTRUCTIONS:**
 Use web search to find the most current information about AI automation trends affecting the role: "${sanitizedRole}"
@@ -505,105 +502,101 @@ Search for:
 }
 
 Return ONLY the JSON object. Do not include explanatory text before or after the JSON.`
-            }]
           }]
-        });
+        }]
+      });
 
-        console.log('✅ [Background Analysis] OpenAI response received with web search + enhanced parsing');
-        console.log('📏 [Background Analysis] Response content length:', research.output_text?.length || 0);
+      console.log('✅ [Research API] OpenAI response received with web search + enhanced parsing');
+      console.log('📏 [Research API] Response content length:', research.output_text?.length || 0);
 
-        const responseContent = research.output_text;
-        if (!responseContent) {
-          console.error('❌ [Background Analysis] No response content received from research analysis');
-          throw new Error('No response content received from research analysis');
-        }
-
-        console.log('📄 [Background Analysis] Raw response content (first 200 chars):', responseContent.substring(0, 200));
-
-        // Enhanced JSON extraction for research data
-        console.log('🔍 [Background Analysis] Extracting JSON from research response...');
-        const evidence: any = extractJSON(responseContent, 'Research analysis');
-        if (!evidence) {
-          console.error('❌ [Background Analysis] Could not extract valid JSON from research analysis');
-          console.log('📄 [Background Analysis] Full response content for debugging:', responseContent);
-          throw new Error('Could not extract valid JSON from research analysis');
-        }
-        
-        console.log('📄 [Background Analysis] Research evidence extracted successfully');
-        console.log('📊 [Background Analysis] Evidence structure:', {
-          keys: Object.keys(evidence),
-          taskFacts: evidence.taskFacts?.length || 0,
-          macroStats: evidence.macroStats?.length || 0,
-          hasIndustryContext: !!evidence.industryContext
-        });
-
-        // Add LinkedIn data to evidence if available
-        if (linkedinData && !linkedinData.error) {
-          evidence.linkedinProfile = linkedinData;
-          console.log('🔗 [Background Analysis] Added LinkedIn data to evidence');
-        }
-
-        console.log('🔥 [Background Analysis] Attempting to import analyze function...');
-        
-        try {
-          // Use shared analyze function to avoid HTTP auth issues
-          const { performAnalysis } = await import('../../../lib/analyze-core');
-          console.log('✅ [Background Analysis] Successfully imported analyze function');
-          
-          console.log('📦 [Background Analysis] Calling analyze function with payload:', {
-            profile_id: profile.id,
-            evidence_keys: Object.keys(evidence),
-            evidence_size: JSON.stringify(evidence).length
-          });
-
-          const result = await performAnalysis(profile.id, evidence);
-          console.log('✅ [Background Analysis] Analysis completed successfully:', result);
-          console.log('🎉 [Background Analysis] Background analysis workflow completed for profile:', profile.id);
-        } catch (importError) {
-          console.error('❌ [Background Analysis] Analysis function failed:', importError);
-          console.error('📚 [Background Analysis] Import error details:', {
-            error: importError instanceof Error ? importError.message : String(importError),
-            stack: importError instanceof Error ? importError.stack : 'No stack trace',
-            name: importError instanceof Error ? importError.name : 'Unknown error type'
-          });
-          throw importError;
-        }
-      } catch (analysisError) {
-        console.error('💥 [Background Analysis] Background analysis failed:', analysisError);
-        console.error('📚 [Background Analysis] Analysis error details:', {
-          error: analysisError instanceof Error ? analysisError.message : String(analysisError),
-          stack: analysisError instanceof Error ? analysisError.stack : 'No stack trace',
-          name: analysisError instanceof Error ? analysisError.name : 'Unknown error type',
-          profile_id: profile.id
-        });
-        
-        // Try to save error info to database for debugging
-        try {
-          console.log('💾 [Background Analysis] Attempting to save error info to database...');
-          await supabase
-            .from('profiles')
-            .update({ 
-              profile_data: { 
-                ...profileData,
-                analysis_error: analysisError instanceof Error ? analysisError.message : String(analysisError),
-                analysis_error_time: new Date().toISOString(),
-                analysis_error_stack: analysisError instanceof Error ? analysisError.stack : 'No stack trace'
-              }
-            })
-            .eq('id', profile.id);
-          console.log('📝 [Background Analysis] Error info saved to profile for debugging');
-        } catch (saveError) {
-          console.error('❌ [Background Analysis] Could not save error info:', saveError);
-        }
+      const responseContent = research.output_text;
+      if (!responseContent) {
+        console.error('❌ [Research API] No response content received from research analysis');
+        throw new Error('No response content received from research analysis');
       }
-    })(); // Start analysis in background without waiting
 
-    console.log('✅ [Research API] Request completed successfully - analysis running in background');
-    return NextResponse.json({ 
-      status: 'processing', 
-      profile_id: profile.id,
-      message: 'Analysis started, results will be available shortly. Please wait for polling to complete.'
-    });
+      console.log('📄 [Research API] Raw response content (first 200 chars):', responseContent.substring(0, 200));
+
+      // Enhanced JSON extraction for research data
+      console.log('🔍 [Research API] Extracting JSON from research response...');
+      const evidence: any = extractJSON(responseContent, 'Research analysis');
+      if (!evidence) {
+        console.error('❌ [Research API] Could not extract valid JSON from research analysis');
+        console.log('📄 [Research API] Full response content for debugging:', responseContent);
+        throw new Error('Could not extract valid JSON from research analysis');
+      }
+      
+      console.log('📄 [Research API] Research evidence extracted successfully');
+      console.log('📊 [Research API] Evidence structure:', {
+        keys: Object.keys(evidence),
+        taskFacts: evidence.taskFacts?.length || 0,
+        macroStats: evidence.macroStats?.length || 0,
+        hasIndustryContext: !!evidence.industryContext
+      });
+
+      // Add LinkedIn data to evidence if available
+      if (linkedinData && !linkedinData.error) {
+        evidence.linkedinProfile = linkedinData;
+        console.log('🔗 [Research API] Added LinkedIn data to evidence');
+      }
+
+      console.log('🔥 [Research API] Calling analyze function...');
+      
+      // Use shared analyze function directly
+      const { performAnalysis } = await import('../../../lib/analyze-core');
+      console.log('✅ [Research API] Successfully imported analyze function');
+      
+      console.log('📦 [Research API] Calling analyze function with payload:', {
+        profile_id: profile.id,
+        evidence_keys: Object.keys(evidence),
+        evidence_size: JSON.stringify(evidence).length
+      });
+
+      const result = await performAnalysis(profile.id, evidence);
+      console.log('✅ [Research API] Analysis completed successfully:', result);
+      console.log('🎉 [Research API] Synchronous analysis workflow completed for profile:', profile.id);
+      
+      return NextResponse.json({ 
+        status: 'completed', 
+        profile_id: profile.id,
+        report_id: result.report_id,
+        message: 'Analysis completed successfully'
+      });
+      
+    } catch (analysisError) {
+      console.error('💥 [Research API] Synchronous analysis failed:', analysisError);
+      console.error('📚 [Research API] Analysis error details:', {
+        error: analysisError instanceof Error ? analysisError.message : String(analysisError),
+        stack: analysisError instanceof Error ? analysisError.stack : 'No stack trace',
+        name: analysisError instanceof Error ? analysisError.name : 'Unknown error type',
+        profile_id: profile.id
+      });
+      
+      // Try to save error info to database for debugging
+      try {
+        console.log('💾 [Research API] Attempting to save error info to database...');
+        await supabase
+          .from('profiles')
+          .update({ 
+            profile_data: { 
+              ...profileData,
+              analysis_error: analysisError instanceof Error ? analysisError.message : String(analysisError),
+              analysis_error_time: new Date().toISOString(),
+              analysis_error_stack: analysisError instanceof Error ? analysisError.stack : 'No stack trace'
+            }
+          })
+          .eq('id', profile.id);
+        console.log('📝 [Research API] Error info saved to profile for debugging');
+      } catch (saveError) {
+        console.error('❌ [Research API] Could not save error info:', saveError);
+      }
+      
+      return NextResponse.json({ 
+        status: 'error', 
+        profile_id: profile.id,
+        error: 'Analysis failed: ' + (analysisError instanceof Error ? analysisError.message : String(analysisError))
+      }, { status: 500 });
+    }
 
   } catch (error) {
     console.error('💥 [Research API] Unexpected error:', error);
