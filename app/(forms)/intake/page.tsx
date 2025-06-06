@@ -264,7 +264,7 @@ function IntakeContent() {
               timeline: "2-4 years",
               previewRecommendations: reportData.preview,
               recommendations: reportData.full_report,
-              hasFullReport: Boolean(isSignedIn && isLoaded) // Signed-in users get full access
+              hasFullReport: Boolean(isSignedIn && isLoaded && reportData.full_report) // Only if signed in AND full report exists
             });
             
             // Move to results step and stop analysis animation
@@ -868,7 +868,58 @@ function IntakeContent() {
                 </div>
 
                 {/* Email Signup CTA or Full Report Available */}
-                {!result.hasFullReport ? (
+                {result.hasFullReport ? (
+                  // Signed-in user with full report available
+                  <Card className="border-2 border-green-500">
+                    <CardHeader className="text-center">
+                      <CardTitle className="text-lg text-green-800">Analysis Complete!</CardTitle>
+                      <CardDescription>
+                        Your comprehensive AI risk assessment is available. You can view the complete report and track your progress on your dashboard.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="text-center space-y-4">
+                      <div className="bg-green-50 rounded-lg p-4">
+                        <CheckCircle className="w-8 h-8 text-green-600 mx-auto mb-2" />
+                        <p className="text-green-800 font-medium">Full Report Access</p>
+                        <p className="text-sm text-green-700">Your complete analysis includes detailed recommendations and action items.</p>
+                      </div>
+                      <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+                        <Button variant="outline" className="flex-1" onClick={() => router.push('/dashboard')}>
+                          View All Reports
+                        </Button>
+                        <Button className="flex-1" onClick={() => router.push(`/report?id=${result.id}&paid=true&from=intake`)}>
+                          View Full Report
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : isSignedIn && isLoaded ? (
+                  // Signed-in user but full report not ready yet
+                  <Card className="border-2 border-amber-500">
+                    <CardHeader className="text-center">
+                      <CardTitle className="text-lg text-amber-800">Report Processing</CardTitle>
+                      <CardDescription>
+                        Your detailed analysis is being generated. You can view the preview above and check your dashboard for the complete report.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="text-center space-y-4">
+                      <div className="bg-amber-50 rounded-lg p-4">
+                        <Clock className="w-8 h-8 text-amber-600 mx-auto mb-2" />
+                        <p className="text-amber-800 font-medium">Full Report In Progress</p>
+                        <p className="text-sm text-amber-700">Your complete analysis with detailed recommendations is being prepared.</p>
+                      </div>
+                      <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+                        <Button variant="outline" className="flex-1" onClick={() => router.push('/dashboard')}>
+                          Go to Dashboard
+                        </Button>
+                        <Button className="flex-1" onClick={() => router.push(`/report?id=${result.id}&paid=true&from=intake`)}>
+                          View Current Report
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  // Non-signed-in user - show paywall
                   <Card className="border-2 border-primary">
                     <CardHeader className="text-center">
                       <CardTitle className="text-lg">Get Your Complete Report</CardTitle>
@@ -898,30 +949,6 @@ function IntakeContent() {
                         <Button className="flex-1" onClick={() => router.push(`/paywall?id=${result.id}`)}>
                           <CreditCard className="w-4 h-4 mr-2" />
                           Sign Up for Full Report
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <Card className="border-2 border-green-500">
-                    <CardHeader className="text-center">
-                      <CardTitle className="text-lg text-green-800">Analysis Complete!</CardTitle>
-                      <CardDescription>
-                        Your comprehensive AI risk assessment is available. You can view the complete report and track your progress on your dashboard.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="text-center space-y-4">
-                      <div className="bg-green-50 rounded-lg p-4">
-                        <CheckCircle className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                        <p className="text-green-800 font-medium">Full Report Access</p>
-                        <p className="text-sm text-green-700">Your complete analysis includes detailed recommendations and action items.</p>
-                      </div>
-                      <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
-                        <Button variant="outline" className="flex-1" onClick={() => router.push('/dashboard')}>
-                          View All Reports
-                        </Button>
-                        <Button className="flex-1" onClick={() => router.push(`/report?id=${result.id}&paid=true&from=intake`)}>
-                          View Full Report
                         </Button>
                       </div>
                     </CardContent>
