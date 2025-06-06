@@ -4,8 +4,8 @@ import OpenAI from 'openai';
 import { analysisPrompt } from '@/server/promptTemplates';
 import { score } from '@/server/score';
 
-export const runtime = 'edge';
-export const maxDuration = 800; // 13.33 minutes - maximum allowed for current Vercel plan
+export const runtime = 'nodejs';
+export const maxDuration = 300; // 5 minutes - Node.js runtime allows longer duration
 
 // Function to sanitize text for database insertion
 function sanitizeText(text: string): string {
