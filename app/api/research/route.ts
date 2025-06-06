@@ -268,11 +268,36 @@ export async function POST(req: NextRequest) {
       console.log('👤 [Research API] User authentication:', { 
         userId, 
         hasSession: !!sessionId,
-        authResult: authResult 
+        sessionExists: !!authResult.sessionId,
+        userExists: !!authResult.userId,
+        authKeys: Object.keys(authResult || {})
       });
+      
+      // Additional check - try to get user from headers if auth() fails
+      if (!userId) {
+        const authHeader = req.headers.get('authorization');
+        const clerkUserId = req.headers.get('clerk-user-id');
+        console.log('👤 [Research API] Fallback auth check:', {
+          hasAuthHeader: !!authHeader,
+          hasClerkUserIdHeader: !!clerkUserId,
+          userAgent: req.headers.get('user-agent')
+        });
+      }
+      
     } catch (authError) {
       console.error('⚠️ [Research API] Authentication failed:', authError);
       console.log('👤 [Research API] Continuing without user authentication');
+      
+      // Try one more fallback approach
+      try {
+        const cookies = req.headers.get('cookie');
+        console.log('🍪 [Research API] Checking cookies for auth info:', {
+          hasCookies: !!cookies,
+          cookieLength: cookies?.length || 0
+        });
+      } catch (cookieError) {
+        console.log('🍪 [Research API] Cookie check failed:', cookieError);
+      }
     }
     
     const body = await req.json();
@@ -369,6 +394,13 @@ export async function POST(req: NextRequest) {
     }
 
     console.log('💾 [Research API] Inserting profile into database...');
+    console.log('🔐 [Research API] Profile insertion with auth details:', {
+      user_id: userId,
+      has_session: !!sessionId,
+      profile_data_keys: profileData ? Object.keys(profileData) : [],
+      linkedin_data_available: !!(linkedinData && !linkedinData.error)
+    });
+    
     const { data: profile, error: dbError } = await supabase
       .from('profiles')
       .insert([{ 
@@ -376,7 +408,7 @@ export async function POST(req: NextRequest) {
         resume: sanitizedResume, 
         task_hours: tasks || {},
         email: null, // Email will be fetched from Clerk if needed
-        user_id: userId, // Store Clerk user ID for linking
+        user_id: userId, // Store Clerk user ID for linking (null for anonymous users)
         // Store additional profile data as JSON
         profile_data: profileData ? {
           careerCategory: profileData.careerCategory,
@@ -384,8 +416,14 @@ export async function POST(req: NextRequest) {
           companySize: profileData.companySize,
           dailyWorkSummary: profileData.dailyWorkSummary,
           keySkills: profileData.keySkills,
+          linkedinUrl: linkedinUrl,
+          created_with_auth: !!userId, // Track if created with or without auth
+          auth_session_id: sessionId, // Store session ID for debugging
+        } : {
+          created_with_auth: !!userId,
+          auth_session_id: sessionId,
           linkedinUrl: linkedinUrl
-        } : null,
+        },
         linkedin_data: linkedinData && !linkedinData.error ? linkedinData : null
       }])
       .select()

@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { Shield } from "lucide-react";
 
 interface LogoProps {
   size?: "sm" | "md" | "lg";
@@ -26,45 +25,26 @@ export function Logo({
     lg: "text-2xl"
   };
 
-  // Try to load the actual logo image, prioritizing PNG files that user uploaded
-  const logoSrc = variant === "dark" ? "/app_icon.png" : "/website_logo.png";
-  const fallbackSrc = variant === "dark" ? "/logo-dark.svg" : "/logo.svg";
+  // Use the Career Guard SVG from public folder
+  const logoSrc = "/career_guard_icon.svg";
   
   return (
     <div className={`flex items-center space-x-2 ${className}`}>
-      {/* Try to show logo image, fallback to icon */}
+      {/* Career Guard SVG Icon */}
       <div className="relative">
         <Image
           src={logoSrc}
-          alt="Career Guard Logo"
+          alt="Career Guard Icon"
           width={size === "sm" ? 24 : size === "md" ? 32 : 48}
           height={size === "sm" ? 24 : size === "md" ? 32 : 48}
           className={sizeClasses[size]}
-          onError={(e) => {
-            // First try SVG fallback, then shield icon
-            const target = e.target as HTMLImageElement;
-            if (!target.src.includes('.svg')) {
-              target.src = fallbackSrc;
-            } else {
-              // SVG also failed, show shield icon
-              target.style.display = "none";
-              const icon = target.nextElementSibling as HTMLElement;
-              if (icon) icon.style.display = "block";
-            }
-          }}
-        />
-        {/* Fallback icon (hidden by default, shown if all images fail) */}
-        <Shield 
-          className={`${sizeClasses[size]} text-primary hidden`}
-          style={{ display: "none" }}
+          priority
         />
       </div>
       
-      {/* Logo text */}
+      {/* Text Logo */}
       {showText && (
-        <span className={`font-bold ${textSizeClasses[size]} ${
-          variant === "dark" ? "text-white" : "text-slate-900"
-        }`}>
+        <span className={`font-bold text-slate-900 ${textSizeClasses[size]}`}>
           Career Guard
         </span>
       )}
