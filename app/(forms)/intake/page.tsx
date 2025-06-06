@@ -37,7 +37,7 @@ const assessmentSchema = z.object({
   companySize: z.string().optional(),
   dailyWorkSummary: z.string().min(50, "Please provide at least 50 characters describing your daily work"),
   keySkills: z.string().optional(),
-  linkedinUrl: z.string().optional(),
+  linkedinUrl: z.string().min(1, "Please provide your LinkedIn profile URL").url("Please enter a valid LinkedIn URL"),
 });
 
 type AssessmentFormData = z.infer<typeof assessmentSchema>;
@@ -643,7 +643,7 @@ function IntakeContent() {
                       <FormItem>
                         <FormLabel className="flex items-center">
                           <Linkedin className="w-4 h-4 mr-2 text-blue-600" />
-                          LinkedIn Profile URL (Optional)
+                          LinkedIn Profile URL
                         </FormLabel>
                         <FormControl>
                           <Input 
@@ -652,7 +652,7 @@ function IntakeContent() {
                           />
                         </FormControl>
                         <p className="text-sm text-slate-500">
-                          Our AI will analyze your LinkedIn profile for more comprehensive assessment
+                          We'll analyze your LinkedIn profile for comprehensive assessment
                         </p>
                         <FormMessage />
                       </FormItem>

@@ -15,7 +15,7 @@ export default function AuthCallback() {
     if (!isLoaded) return;
 
     if (isSignedIn) {
-      // Check for pending report ID
+      // Check for pending report ID first
       const pendingReportId = sessionStorage.getItem('pendingReportId');
       
       if (pendingReportId) {
@@ -23,10 +23,44 @@ export default function AuthCallback() {
         sessionStorage.removeItem('pendingReportId');
         // Redirect to the report with paid access
         router.push(`/report?id=${pendingReportId}&paid=true`);
-      } else {
-        // No pending report, go to home
-        router.push('/');
+        return;
       }
+
+      // Check if user has recent reports to determine if first time user
+      const checkUserReports = async () => {
+        try {
+          const response = await fetch('/api/user-reports');
+          if (response.ok) {
+            const data = await response.json();
+            const reports = data.reports || [];
+            
+            // If user has reports from today (likely just completed assessment), go to latest report
+            const today = new Date().toDateString();
+            const todaysReports = reports.filter((report: any) => 
+              new Date(report.created_at).toDateString() === today
+            );
+            
+            if (todaysReports.length > 0) {
+              // User just completed an assessment, show them their latest report
+              const latestReport = todaysReports[0];
+              router.push(`/report?id=${latestReport.id}&paid=true&from=signin`);
+            } else {
+              // Existing user, go to dashboard
+              router.push('/dashboard');
+            }
+          } else {
+            // API call failed, default to dashboard
+            router.push('/dashboard');
+          }
+        } catch (error) {
+          console.error('Error checking user reports:', error);
+          // Default to dashboard on error
+          router.push('/dashboard');
+        }
+      };
+
+      // Small delay to ensure user is fully authenticated
+      setTimeout(checkUserReports, 500);
     } else {
       // Not signed in, redirect to home
       router.push('/');

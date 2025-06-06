@@ -69,8 +69,8 @@ function MarkdownContent({ content }: { content: string }) {
         return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">${domain}</a>`;
       })
       
-      // Handle numbered references like [1], [2], etc.
-      .replace(/\[(\d+)\]/g, '<sup class="text-xs bg-blue-100 text-blue-800 px-1 py-0.5 rounded">$1</sup>')
+      // Handle numbered references like [1], [2], etc. as clickable footnotes
+      .replace(/\[(\d+)\]/g, '<span class="inline-flex items-center justify-center w-5 h-5 text-xs font-medium text-white bg-blue-600 rounded-full">$1</span>')
       
       // Lists - improved handling
       .replace(/^\* (.*$)/gim, '<li class="ml-4 mb-1 list-disc">$1</li>')

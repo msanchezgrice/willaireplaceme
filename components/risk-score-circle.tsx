@@ -16,13 +16,21 @@ export function RiskScoreCircle({
 }: RiskScoreCircleProps) {
   const [animatedScore, setAnimatedScore] = useState(0);
   
+  // Ensure score is within valid range
+  const clampedScore = Math.max(0, Math.min(100, score || 0));
+  
   useEffect(() => {
+    // Reset animation if score changes significantly
+    if (Math.abs(clampedScore - animatedScore) > 5) {
+      setAnimatedScore(0);
+    }
+    
     const timer = setTimeout(() => {
-      setAnimatedScore(score);
-    }, 500);
+      setAnimatedScore(clampedScore);
+    }, 300);
     
     return () => clearTimeout(timer);
-  }, [score]);
+  }, [clampedScore, animatedScore]);
 
   const radius = (size - 8) / 2;
   const circumference = radius * 2 * Math.PI;
@@ -72,17 +80,17 @@ export function RiskScoreCircle({
           strokeDasharray={strokeDasharray}
           strokeDashoffset={strokeDashoffset}
           strokeLinecap="round"
-          className={cn("transition-all duration-1000 ease-out", getScoreColor(score))}
+          className={cn("transition-all duration-1000 ease-out", getScoreColor(clampedScore))}
         />
       </svg>
       
       {/* Score text */}
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <div className={cn("text-2xl font-bold", getScoreColor(score))}>
+        <div className={cn("text-2xl font-bold", getScoreColor(clampedScore))}>
           {Math.round(animatedScore)}
         </div>
         <div className="text-xs text-slate-500 font-medium">
-          {getScoreLabel(score)}
+          {getScoreLabel(clampedScore)}
         </div>
       </div>
     </div>
