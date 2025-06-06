@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { useForm } from "react-hook-form";
@@ -58,6 +58,18 @@ interface AssessmentResult {
 }
 
 export default function Intake() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    }>
+      <IntakeContent />
+    </Suspense>
+  );
+}
+
+function IntakeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isSignedIn, isLoaded } = useUser();
