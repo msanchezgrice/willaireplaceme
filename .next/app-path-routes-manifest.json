@@ -2,15 +2,16 @@
   "/_not-found/page": "/_not-found",
   "/(forms)/intake/page": "/intake",
   "/page": "/",
+  "/sign-in/[[...sign-in]]/page": "/sign-in/[[...sign-in]]",
   "/(forms)/paywall/page": "/paywall",
   "/auth-callback/page": "/auth-callback",
-  "/sign-in/[[...sign-in]]/page": "/sign-in/[[...sign-in]]",
   "/sign-up/[[...sign-up]]/page": "/sign-up/[[...sign-up]]",
   "/dashboard/page": "/dashboard",
   "/report/page": "/report",
-  "/api/payment-success/route": "/api/payment-success",
   "/api/create-payment-intent/route": "/api/create-payment-intent",
+  "/api/payment-success/route": "/api/payment-success",
   "/api/reports/[id]/route": "/api/reports/[id]",
   "/api/analyze/route": "/api/analyze",
+  "/api/user-reports/route": "/api/user-reports",
   "/api/research/route": "/api/research"
 }

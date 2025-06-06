@@ -27,7 +27,7 @@ export function Logo({
   };
 
   // Try to load the actual logo image, prioritizing PNG files that user uploaded
-  const logoSrc = variant === "dark" ? "/logo-dark.png" : "/logo.png";
+  const logoSrc = variant === "dark" ? "/app_icon.png" : "/website_logo.png";
   const fallbackSrc = variant === "dark" ? "/logo-dark.svg" : "/logo.svg";
   
   return (
