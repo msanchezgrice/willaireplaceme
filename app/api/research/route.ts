@@ -475,26 +475,37 @@ Return ONLY the JSON object. Do not include explanatory text before or after the
           evidence.linkedinProfile = linkedinData;
         }
 
-        console.log('🔥 [Research API] Calling analyze API directly...');
+        console.log('🔥 [Research API] Calling analyze API via HTTP request...');
         
-        // Call analyze API directly instead of HTTP fetch to avoid environment issues
-        const analyzeRequest = new NextRequest('http://localhost/api/analyze', {
+        // Construct the base URL more reliably
+        const baseUrl = process.env.VERCEL_URL 
+          ? `https://${process.env.VERCEL_URL}`
+          : process.env.NODE_ENV === 'production'
+          ? 'https://willaireplace.me'
+          : 'http://localhost:3000';
+        
+        console.log('🌐 [Research API] Using base URL:', baseUrl);
+        
+        // Make HTTP request to analyze API instead of direct import to avoid edge runtime issues
+        const analyzeResponse = await fetch(`${baseUrl}/api/analyze`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'User-Agent': 'CareerGuard/1.0'
+          },
           body: JSON.stringify({ profile_id: profile.id, evidence }),
+          signal: AbortSignal.timeout(600000) // 10 minute timeout for analysis
         });
 
-        // Import and call analyze function directly
-        const { POST: analyzeHandler } = await import('../analyze/route');
-        const analysisResponse = await analyzeHandler(analyzeRequest);
+        console.log('📡 [Research API] Analyze API response status:', analyzeResponse.status);
 
-        if (!analysisResponse.ok) {
-          const errorText = await analysisResponse.text();
-          console.error('❌ [Research API] Analysis failed:', analysisResponse.status, errorText);
-          throw new Error(`Analysis failed: ${analysisResponse.status} ${errorText}`);
+        if (!analyzeResponse.ok) {
+          const errorText = await analyzeResponse.text();
+          console.error('❌ [Research API] Analysis failed:', analyzeResponse.status, errorText);
+          throw new Error(`Analysis failed: ${analyzeResponse.status} ${errorText}`);
         }
 
-        const result = await analysisResponse.json();
+        const result = await analyzeResponse.json();
         console.log('✅ [Research API] Background analysis completed successfully:', result);
       } catch (analysisError) {
         console.error('💥 [Research API] Background analysis failed:', analysisError);
