@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useUser, UserButton } from "@clerk/nextjs";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,12 +22,14 @@ import {
   Menu,
   Linkedin,
   LogIn,
-  User
+  User,
+  FileText
 } from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
   const { isSignedIn, user, isLoaded } = useUser();
+  const [selectedExampleCareer, setSelectedExampleCareer] = useState('product-manager');
 
   const careerCategories = [
     {
@@ -70,6 +73,95 @@ export default function Home() {
       assessmentCount: 892,
     },
   ];
+
+  const exampleReports = {
+    'product-manager': {
+      title: 'Product Manager Assessment',
+      risk: 38,
+      riskLevel: 'Moderate Risk',
+      timeline: '2-4 years',
+      description: 'Comprehensive analysis of AI impact on product management roles, including task automation, strategic requirements, and future-proofing strategies.',
+      riskAreas: [
+        { task: 'Requirements documentation', level: 'High Risk', color: 'red' },
+        { task: 'Market research analysis', level: 'Moderate Risk', color: 'amber' },
+        { task: 'Strategic decision making', level: 'Low Risk', color: 'green' }
+      ],
+      actions: [
+        'Focus on strategic and creative problem solving',
+        'Develop stakeholder management expertise',
+        'Learn to work with AI tools as productivity enhancers'
+      ],
+      details: [
+        { task: 'PRD Writing', level: 'High', description: 'AI tools can generate detailed PRDs and user stories automatically.' },
+        { task: 'Market Analysis', level: 'Medium', description: 'AI can process market data but needs human insight for strategy.' }
+      ]
+    },
+    'designer': {
+      title: 'Designer Assessment',
+      risk: 42,
+      riskLevel: 'Moderate Risk',
+      timeline: '3-5 years',
+      description: 'Analysis of AI impact on design roles, focusing on creative automation, design tools, and strategic design thinking.',
+      riskAreas: [
+        { task: 'Logo and basic graphics', level: 'High Risk', color: 'red' },
+        { task: 'UI/UX wireframing', level: 'Moderate Risk', color: 'amber' },
+        { task: 'User research & strategy', level: 'Low Risk', color: 'green' }
+      ],
+      actions: [
+        'Focus on user research and design strategy',
+        'Develop complex problem-solving skills',
+        'Learn to collaborate with AI design tools'
+      ],
+      details: [
+        { task: 'Basic Graphics', level: 'High', description: 'AI can generate logos, icons, and simple graphics automatically.' },
+        { task: 'UI Design', level: 'Medium', description: 'AI assists with layouts but needs human creativity for innovation.' }
+      ]
+    },
+    'marketing': {
+      title: 'Marketing Assessment',
+      risk: 65,
+      riskLevel: 'High Risk',
+      timeline: '1-3 years',
+      description: 'Evaluation of AI impact on marketing roles, including content creation, campaign management, and data analysis.',
+      riskAreas: [
+        { task: 'Content writing & copywriting', level: 'High Risk', color: 'red' },
+        { task: 'Social media management', level: 'High Risk', color: 'red' },
+        { task: 'Brand strategy & positioning', level: 'Low Risk', color: 'green' }
+      ],
+      actions: [
+        'Develop strategic brand thinking',
+        'Focus on creative campaign concepts',
+        'Learn advanced data interpretation skills'
+      ],
+      details: [
+        { task: 'Content Writing', level: 'High', description: 'AI can generate blog posts, social content, and ad copy effectively.' },
+        { task: 'Campaign Analytics', level: 'Medium', description: 'AI processes data but needs human insight for strategy.' }
+      ]
+    },
+    'accounting': {
+      title: 'Accounting Assessment',
+      risk: 78,
+      riskLevel: 'High Risk',
+      timeline: '1-2 years',
+      description: 'Analysis of AI automation in accounting, focusing on bookkeeping, financial analysis, and advisory services.',
+      riskAreas: [
+        { task: 'Data entry & bookkeeping', level: 'High Risk', color: 'red' },
+        { task: 'Basic financial reporting', level: 'High Risk', color: 'red' },
+        { task: 'Strategic financial advisory', level: 'Low Risk', color: 'green' }
+      ],
+      actions: [
+        'Transition to advisory and strategic roles',
+        'Develop client relationship skills',
+        'Focus on complex financial planning'
+      ],
+      details: [
+        { task: 'Bookkeeping', level: 'High', description: 'AI automates most data entry and transaction categorization.' },
+        { task: 'Tax Prep', level: 'High', description: 'AI can handle standard tax returns with minimal human input.' }
+      ]
+    }
+  };
+
+  const currentExample = exampleReports[selectedExampleCareer as keyof typeof exampleReports];
 
   return (
     <div className="min-h-screen bg-background">
@@ -371,6 +463,167 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Example Reports */}
+      <section className="py-12 sm:py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mb-4">Example Reports</h2>
+            <p className="text-lg sm:text-xl text-slate-600 max-w-3xl mx-auto">
+              See what insights and recommendations our AI provides for different career paths
+            </p>
+          </div>
+
+          {/* Report Preview Carousel */}
+          <div className="max-w-5xl mx-auto mb-12">
+            <div className="grid lg:grid-cols-2 gap-8 items-center">
+              <div className="space-y-6">
+                <div className="flex flex-wrap gap-2 mb-6">
+                  {[
+                    { id: 'product-manager', name: 'Product Manager' },
+                    { id: 'designer', name: 'Designer' },
+                    { id: 'marketing', name: 'Marketing' },
+                    { id: 'accounting', name: 'Accounting' }
+                  ].map((career) => (
+                    <button
+                      key={career.id}
+                      onClick={() => setSelectedExampleCareer(career.id)}
+                      className={`px-3 py-1 text-sm rounded-full border transition-colors ${
+                        selectedExampleCareer === career.id
+                          ? 'border-primary bg-primary text-white'
+                          : 'border-slate-300 hover:bg-slate-50'
+                      }`}
+                    >
+                      {career.name}
+                    </button>
+                  ))}
+                </div>
+                
+                <div>
+                  <h3 className="text-2xl font-bold text-slate-900 mb-2">{currentExample.title}</h3>
+                  <div className="flex items-center space-x-4 mb-4">
+                    <Badge className={`${
+                      currentExample.risk <= 33 ? 'bg-green-100 text-green-800' :
+                      currentExample.risk <= 66 ? 'bg-amber-100 text-amber-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {currentExample.riskLevel} ({currentExample.risk}/100)
+                    </Badge>
+                    <span className="text-sm text-slate-600">Timeline: {currentExample.timeline}</span>
+                  </div>
+                  <p className="text-slate-600 mb-6">
+                    {currentExample.description}
+                  </p>
+                  
+                  <div className="space-y-4">
+                    <div className="bg-slate-50 rounded-lg p-4">
+                      <h4 className="font-semibold text-slate-900 mb-2">Key Risk Areas</h4>
+                      <ul className="space-y-2 text-sm text-slate-600">
+                        {currentExample.riskAreas.map((area, index) => (
+                          <li key={index} className="flex items-center">
+                            <div className={`w-2 h-2 rounded-full mr-3 ${
+                              area.color === 'red' ? 'bg-red-500' :
+                              area.color === 'amber' ? 'bg-amber-500' :
+                              'bg-green-500'
+                            }`}></div>
+                            {area.task} ({area.level})
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    
+                    <div className="bg-blue-50 rounded-lg p-4">
+                      <h4 className="font-semibold text-slate-900 mb-2">Recommended Actions</h4>
+                      <ul className="space-y-1 text-sm text-slate-600">
+                        {currentExample.actions.map((action, index) => (
+                          <li key={index}>• {action}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-center">
+                <Card className="shadow-xl max-w-sm">
+                  <CardHeader className="text-center pb-4">
+                    <div className="mx-auto mb-4">
+                      <RiskScoreCircle score={currentExample.risk} size={100} />
+                    </div>
+                    <CardTitle className="text-lg">{currentExample.title.split(' ')[0]} {currentExample.title.split(' ')[1]}</CardTitle>
+                    <CardDescription>Risk Assessment Report</CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="space-y-0">
+                      {currentExample.details.map((detail, index) => (
+                        <div key={index} className="px-4 py-3 border-b border-slate-200">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-medium text-sm text-slate-900">{detail.task}</span>
+                            <Badge className={`text-xs ${
+                              detail.level === 'High' ? 'bg-red-100 text-red-800' :
+                              detail.level === 'Medium' ? 'bg-amber-100 text-amber-800' :
+                              'bg-green-100 text-green-800'
+                            }`}>
+                              {detail.level}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-slate-600">
+                            {detail.description}
+                          </p>
+                        </div>
+                      ))}
+                      <div className="px-4 py-3 bg-slate-50">
+                        <div className="text-xs text-slate-600 text-center mb-2">
+                          <Clock className="w-3 h-3 inline mr-1" />
+                          Timeline: {currentExample.timeline}
+                        </div>
+                        <Button size="sm" className="w-full" onClick={() => router.push('/intake')}>
+                          Get Your Assessment
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+
+          {/* Report Features */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-100 text-primary rounded-lg mb-4">
+                <ChartLine className="w-6 h-6" />
+              </div>
+              <h4 className="font-semibold text-slate-900 mb-2">Risk Score Breakdown</h4>
+              <p className="text-sm text-slate-600">Detailed analysis across multiple risk factors with timeline predictions</p>
+            </div>
+            
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-100 text-primary rounded-lg mb-4">
+                <Bot className="w-6 h-6" />
+              </div>
+              <h4 className="font-semibold text-slate-900 mb-2">AI Tool Analysis</h4>
+              <p className="text-sm text-slate-600">Current and emerging AI tools specific to your industry and role</p>
+            </div>
+            
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-100 text-primary rounded-lg mb-4">
+                <Users className="w-6 h-6" />
+              </div>
+              <h4 className="font-semibold text-slate-900 mb-2">Career Strategies</h4>
+              <p className="text-sm text-slate-600">Personalized recommendations to future-proof your career path</p>
+            </div>
+            
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-100 text-primary rounded-lg mb-4">
+                <FileText className="w-6 h-6" />
+              </div>
+              <h4 className="font-semibold text-slate-900 mb-2">Action Plan</h4>
+              <p className="text-sm text-slate-600">Step-by-step guide with skills to develop and strategic moves to make</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Pricing */}
       <section id="pricing" className="py-12 sm:py-20 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -436,18 +689,19 @@ export default function Home() {
                     </li>
                   ))}
                 </ul>
-                <Link href="/intake">
-                  <Button className="w-full shadow-lg" size="lg">
-                    Get Full Report
-                  </Button>
-                </Link>
+                <div className="mt-6">
+                  <Link href="/intake">
+                    <Button className="w-full shadow-lg" size="lg">
+                      Get Full Report
+                    </Button>
+                  </Link>
+                </div>
               </CardContent>
             </Card>
           </div>
 
           <div className="text-center mt-6 sm:mt-8">
             <p className="text-slate-600">
-              <Shield className="w-4 h-4 inline mr-2 text-green-600" />
               Secure signup • Instant delivery • No spam ever
             </p>
           </div>

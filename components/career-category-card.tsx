@@ -91,7 +91,7 @@ export function CareerCategoryCard({ category }: CareerCategoryCardProps) {
         </div>
         
         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-          <Link href="/intake">
+          <Link href={`/intake?category=${category.id}`}>
             <Button className="w-full">
               Assess {category.name} Role
               <ArrowRight className="w-4 h-4 ml-2" />

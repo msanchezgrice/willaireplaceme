@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { useForm } from "react-hook-form";
@@ -32,12 +32,22 @@ import {
 
 const assessmentSchema = z.object({
   careerCategory: z.string().min(1, "Please select a career category"),
+  customCareerCategory: z.string().optional(),
   jobTitle: z.string().min(1, "Please enter your job title"),
   yearsExperience: z.string().min(1, "Please select your experience level"),
   companySize: z.string().optional(),
   dailyWorkSummary: z.string().min(50, "Please provide at least 50 characters describing your daily work"),
   keySkills: z.string().optional(),
   linkedinUrl: z.string().min(1, "Please provide your LinkedIn profile URL").url("Please enter a valid LinkedIn URL"),
+}).refine((data) => {
+  // If "other" is selected, customCareerCategory is required
+  if (data.careerCategory === 'other') {
+    return data.customCareerCategory && data.customCareerCategory.trim().length > 0;
+  }
+  return true;
+}, {
+  message: "Please specify your career category",
+  path: ["customCareerCategory"],
 });
 
 type AssessmentFormData = z.infer<typeof assessmentSchema>;
@@ -85,6 +95,7 @@ function IntakeContent() {
     resolver: zodResolver(assessmentSchema),
     defaultValues: {
       careerCategory: "",
+      customCareerCategory: "",
       jobTitle: "",
       yearsExperience: "",
       companySize: "",
@@ -93,6 +104,17 @@ function IntakeContent() {
       linkedinUrl: "",
     },
   });
+
+  // Handle URL parameters for pre-population
+  useEffect(() => {
+    const category = searchParams?.get('category');
+    if (category && ['designer', 'product-manager', 'marketing', 'accounting', 'legal'].includes(category)) {
+      form.setValue('careerCategory', category);
+    }
+  }, [searchParams, form]);
+
+  // Watch the career category to show/hide custom input
+  const selectedCareerCategory = form.watch('careerCategory');
 
   const onSubmit = async (data: AssessmentFormData) => {
     console.log('🚀 [Frontend] Starting assessment submission...');
@@ -381,14 +403,21 @@ function IntakeContent() {
       // Validate current step before proceeding
       if (currentStep === 1) {
         const basicFields = ['careerCategory', 'jobTitle', 'yearsExperience'];
-        const hasErrors = basicFields.some(field => {
-          const value = form.getValues(field as keyof AssessmentFormData);
-          return !value || value.trim() === '';
+        const formValues = form.getValues();
+        
+        // Check basic fields
+        const hasBasicErrors = basicFields.some(field => {
+          const value = formValues[field as keyof AssessmentFormData];
+          return !value || value.toString().trim() === '';
         });
         
-        if (hasErrors) {
+        // Check custom career category if "other" is selected
+        const hasCustomCategoryError = formValues.careerCategory === 'other' && 
+          (!formValues.customCareerCategory || formValues.customCareerCategory.trim() === '');
+        
+        if (hasBasicErrors || hasCustomCategoryError) {
           // Trigger validation display
-          form.trigger(['careerCategory', 'jobTitle', 'yearsExperience']);
+          form.trigger(['careerCategory', 'customCareerCategory', 'jobTitle', 'yearsExperience']);
           return;
         }
       }
@@ -398,10 +427,10 @@ function IntakeContent() {
         const hasErrors = workFields.some(field => {
           const value = form.getValues(field as keyof AssessmentFormData);
           if (field === 'dailyWorkSummary') {
-            return !value || value.trim().length < 50;
+            return !value || value.toString().trim().length < 50;
           }
           if (field === 'linkedinUrl') {
-            return !value || value.trim() === '';
+            return !value || value.toString().trim() === '';
           }
           return false;
         });
@@ -576,6 +605,23 @@ function IntakeContent() {
                       </FormItem>
                     )}
                   />
+
+                  {/* Custom Career Category Input - only show when "other" is selected */}
+                  {selectedCareerCategory === 'other' && (
+                    <FormField
+                      control={form.control}
+                      name="customCareerCategory"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Please specify your career category</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., Software Engineering, Sales, HR..." {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
 
                   <FormField
                     control={form.control}
@@ -809,7 +855,7 @@ function IntakeContent() {
                 <div className="bg-slate-50 rounded-lg p-6">
                   <h4 className="font-semibold text-slate-900 mb-3">Review Your Information</h4>
                   <div className="space-y-2 text-sm">
-                    <div><strong>Role:</strong> {form.watch('jobTitle')} ({form.watch('careerCategory')})</div>
+                    <div><strong>Role:</strong> {form.watch('jobTitle')} ({form.watch('careerCategory') === 'other' ? form.watch('customCareerCategory') : form.watch('careerCategory')})</div>
                     <div><strong>Experience:</strong> {form.watch('yearsExperience')} years</div>
                     <div><strong>Company Size:</strong> {form.watch('companySize') || 'Not specified'}</div>
                     <div><strong>Resume:</strong> {uploadedFile ? 'Uploaded' : 'Not provided'}</div>
