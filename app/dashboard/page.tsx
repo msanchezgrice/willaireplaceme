@@ -19,7 +19,10 @@ import {
   Trash2,
   MoreHorizontal,
   Menu,
-  X
+  X,
+  User,
+  LogOut,
+  Settings
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -38,12 +41,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { SignOutButton } from "@clerk/nextjs";
 
 // Prevent static generation for this page
 export const dynamic = 'force-dynamic';
 
 interface UserReport {
-  id: string;
+  id: string; // This is now the report ID
+  profile_id: string; // This is the profile ID for viewing reports
   score: number;
   created_at: string;
   profile: {
@@ -68,7 +73,6 @@ export default function Dashboard() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [reportToDelete, setReportToDelete] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -249,61 +253,93 @@ export default function Dashboard() {
             <div className="flex items-center justify-between h-16">
               {/* Desktop Navigation */}
               <div className="hidden sm:flex items-center">
-                <Button variant="ghost" onClick={() => router.push('/')} className="mr-4">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back to Home
-                </Button>
                 <h1 className="text-xl font-bold text-slate-900">Your Dashboard</h1>
               </div>
 
               {/* Mobile Navigation */}
               <div className="flex sm:hidden items-center justify-between w-full">
                 <div className="flex items-center">
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                    className="mr-2"
-                  >
-                    {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-                  </Button>
                   <h1 className="text-lg font-bold text-slate-900">Dashboard</h1>
                 </div>
-                <Button 
-                  size="sm" 
-                  onClick={() => router.push('/intake?from=dashboard')}
-                  className="flex-shrink-0"
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  New
-                </Button>
+                <div className="flex items-center space-x-2">
+                  <Button 
+                    size="sm" 
+                    onClick={() => router.push('/intake?from=dashboard')}
+                    className="flex-shrink-0"
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    New
+                  </Button>
+                  
+                  {/* Mobile Profile Dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full">
+                        <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                          <span className="text-xs text-white font-medium">
+                            {user?.firstName?.charAt(0)?.toUpperCase() || 'U'}
+                          </span>
+                        </div>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem className="flex items-center">
+                        <User className="mr-2 h-4 w-4" />
+                        <span>{user?.firstName || 'User'}</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <SignOutButton>
+                          <div className="flex items-center w-full cursor-pointer">
+                            <LogOut className="mr-2 h-4 w-4" />
+                            <span>Sign out</span>
+                          </div>
+                        </SignOutButton>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
 
-              {/* Desktop New Assessment Button */}
-              <div className="hidden sm:block">
+              {/* Desktop Actions */}
+              <div className="hidden sm:flex items-center space-x-4">
                 <Button onClick={() => router.push('/intake?from=dashboard')}>
                   <Plus className="w-4 h-4 mr-2" />
                   New Assessment
                 </Button>
+                
+                {/* Desktop Profile Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-10 w-10 p-0 rounded-full">
+                      <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                        <span className="text-sm text-white font-medium">
+                          {user?.firstName?.charAt(0)?.toUpperCase() || 'U'}
+                        </span>
+                      </div>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem className="flex items-center">
+                      <User className="mr-2 h-4 w-4" />
+                      <div className="flex flex-col">
+                        <span className="font-medium">{user?.firstName || 'User'}</span>
+                        <span className="text-xs text-slate-500">{user?.emailAddresses?.[0]?.emailAddress}</span>
+                      </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <SignOutButton>
+                        <div className="flex items-center w-full cursor-pointer">
+                          <LogOut className="mr-2 h-4 w-4" />
+                          <span>Sign out</span>
+                        </div>
+                      </SignOutButton>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
-
-            {/* Mobile Menu Dropdown */}
-            {mobileMenuOpen && (
-              <div className="sm:hidden border-t border-slate-200 py-2">
-                <Button 
-                  variant="ghost" 
-                  onClick={() => {
-                    router.push('/');
-                    setMobileMenuOpen(false);
-                  }}
-                  className="w-full justify-start text-left"
-                >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back to Home
-                </Button>
-              </div>
-            )}
           </div>
         </div>
 
@@ -461,7 +497,7 @@ export default function Dashboard() {
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem
-                                    onClick={() => router.push(`/report?id=${report.id}&paid=true&from=dashboard`)}
+                                    onClick={() => router.push(`/report?id=${report.profile_id}&paid=true&from=dashboard`)}
                                   >
                                     <FileText className="mr-2 h-4 w-4" />
                                     View Report
@@ -551,7 +587,7 @@ export default function Dashboard() {
                           {/* View Report Button */}
                           <Button 
                             className="w-full mt-3" 
-                            onClick={() => router.push(`/report?id=${report.id}&paid=true&from=dashboard`)}
+                            onClick={() => router.push(`/report?id=${report.profile_id}&paid=true&from=dashboard`)}
                           >
                             <FileText className="w-4 h-4 mr-2" />
                             View Report

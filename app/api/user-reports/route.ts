@@ -51,7 +51,8 @@ export async function GET(req: NextRequest) {
     const reports = profilesWithReports
       ?.filter(profile => profile.reports && profile.reports.length > 0)
       .map(profile => ({
-        id: profile.id,
+        id: profile.reports[0]?.id || profile.id,
+        profile_id: profile.id,
         score: profile.reports[0]?.score || 0,
         created_at: profile.reports[0]?.created_at || profile.created_at,
         profile: {
@@ -63,7 +64,8 @@ export async function GET(req: NextRequest) {
           keySkills: profile.profile_data?.keySkills,
           linkedinUrl: profile.profile_data?.linkedinUrl,
           hasLinkedinData: !!profile.linkedin_data
-        }
+        },
+        linkedin_data: profile.linkedin_data
       })) || [];
 
     console.log(`✅ [User Reports API] Found ${reports.length} reports for user`);
