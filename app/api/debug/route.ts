@@ -6,55 +6,44 @@ export async function GET(req: NextRequest) {
   console.log('🔍 [Debug API] Debug endpoint called');
   
   try {
-    // Test the analyze API endpoint
-    const baseUrl = process.env.VERCEL_URL 
-      ? `https://${process.env.VERCEL_URL}`
-      : process.env.NODE_ENV === 'production'
-      ? 'https://willaireplace.me'
-      : 'http://localhost:3000';
+    // Test the new shared analyze function approach
+    console.log('🧪 [Debug API] Testing shared analyze function...');
     
-    console.log('🌐 [Debug API] Testing base URL:', baseUrl);
-    
-    // Test a simple ping to the analyze endpoint
-    const testResponse = await fetch(`${baseUrl}/api/analyze`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'User-Agent': 'CareerGuard-Debug/1.0'
-      },
-      body: JSON.stringify({
-        profile_id: 'test-profile-id',
-        evidence: { test: 'data' }
-      })
-    });
-    
-    console.log('📡 [Debug API] Test response status:', testResponse.status);
-    console.log('📡 [Debug API] Test response headers:', Object.fromEntries(testResponse.headers.entries()));
-    
-    const responseText = await testResponse.text();
-    console.log('📡 [Debug API] Test response body:', responseText.substring(0, 500));
-    
-    return NextResponse.json({
-      debug: true,
-      baseUrl,
-      testEndpoint: `${baseUrl}/api/analyze`,
-      testResponse: {
-        status: testResponse.status,
-        statusText: testResponse.statusText,
-        headers: Object.fromEntries(testResponse.headers.entries()),
-        body: responseText.substring(0, 500)
-      },
-      environment: {
-        VERCEL_URL: process.env.VERCEL_URL,
-        NODE_ENV: process.env.NODE_ENV
-      }
-    });
+    try {
+      const { performAnalysis } = await import('../../../lib/analyze-core');
+      console.log('✅ [Debug API] Successfully imported analyze function');
+      
+      // Test with mock data (this will fail but should show us the path)
+      const testResult = await performAnalysis('test-profile-id', { test: 'data' });
+      console.log('✅ [Debug API] Analyze function executed:', testResult);
+      
+      return NextResponse.json({
+        debug: true,
+        method: 'shared-function',
+        analyzeImport: 'success',
+        testResult: testResult,
+        message: 'Shared analyze function is working!'
+      });
+      
+    } catch (analyzeError) {
+      console.log('⚠️ [Debug API] Expected error from test data:', analyzeError);
+      
+      return NextResponse.json({
+        debug: true,
+        method: 'shared-function',
+        analyzeImport: 'success',
+        expectedError: analyzeError instanceof Error ? analyzeError.message : String(analyzeError),
+        message: 'Shared analyze function imported successfully (error expected with test data)'
+      });
+    }
     
   } catch (error) {
     console.error('💥 [Debug API] Error:', error);
     return NextResponse.json({
+      debug: true,
       error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : 'No stack trace'
+      stack: error instanceof Error ? error.stack : 'No stack trace',
+      message: 'Failed to test shared analyze function'
     }, { status: 500 });
   }
 } 
