@@ -323,6 +323,53 @@ export default function Dashboard() {
                 </Card>
               </div>
             )}
+
+            {/* Quick Stats */}
+            {reports.length > 0 && (
+              <div className="grid gap-6 md:grid-cols-3 mb-8">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">Latest Score</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-slate-900">
+                      {reports[0]?.score || 0}/100
+                    </div>
+                    <p className="text-sm text-slate-600">
+                      {getRiskLevel(reports[0]?.score || 0).label}
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">Total Assessments</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-slate-900">
+                      {reports.length}
+                    </div>
+                    <p className="text-sm text-slate-600">
+                      Career evaluations completed
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">Trend</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center">
+                      <TrendingUp className="w-5 h-5 text-green-600 mr-2" />
+                      <span className="text-sm text-slate-600">
+                        Improving security
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </div>
 
           {/* Assessments Section */}
@@ -466,53 +513,6 @@ export default function Dashboard() {
               </div>
             )}
           </div>
-
-          {/* Quick Stats */}
-          {reports.length > 0 && (
-            <div className="mt-8 grid gap-6 md:grid-cols-3">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Latest Score</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-slate-900">
-                    {reports[0]?.score || 0}/100
-                  </div>
-                  <p className="text-sm text-slate-600">
-                    {getRiskLevel(reports[0]?.score || 0).label}
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Total Assessments</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-slate-900">
-                    {reports.length}
-                  </div>
-                  <p className="text-sm text-slate-600">
-                    Career evaluations completed
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Trend</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center">
-                    <TrendingUp className="w-5 h-5 text-green-600 mr-2" />
-                    <span className="text-sm text-slate-600">
-                      Improving security
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
         </div>
       </div>
 

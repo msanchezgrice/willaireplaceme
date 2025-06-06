@@ -78,23 +78,32 @@ export async function DELETE(
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // First, verify the report belongs to the authenticated user
+    // First, get the report and its associated profile
     const { data: report, error: fetchError } = await supabase
       .from('reports')
-      .select(`
-        id,
-        profiles!inner(user_id)
-      `)
+      .select('id, profile_id')
       .eq('id', reportId)
       .single();
 
-    if (fetchError) {
-      console.log('⚠️ [Reports API] Report not found for delete:', fetchError.message);
+    if (fetchError || !report) {
+      console.log('⚠️ [Reports API] Report not found for delete:', fetchError?.message);
       return NextResponse.json({ error: 'Report not found' }, { status: 404 });
     }
 
-    // Check if the report belongs to the authenticated user
-    if ((report.profiles as any)?.user_id !== userId) {
+    // Then check if the profile belongs to the authenticated user
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('user_id')
+      .eq('id', report.profile_id)
+      .single();
+
+    if (profileError || !profile) {
+      console.log('⚠️ [Reports API] Profile not found for report:', profileError?.message);
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+    }
+
+    // Check if the profile belongs to the authenticated user
+    if (profile.user_id !== userId) {
       console.log('❌ [Reports API] Unauthorized delete attempt');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
