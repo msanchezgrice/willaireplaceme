@@ -652,7 +652,7 @@ function IntakeContent() {
                           />
                         </FormControl>
                         <p className="text-sm text-slate-500">
-                          We'll analyze your LinkedIn profile for comprehensive assessment
+                          We&apos;ll analyze your LinkedIn profile for comprehensive assessment
                         </p>
                         <FormMessage />
                       </FormItem>
