@@ -108,13 +108,27 @@ function ReportContent() {
   // Get back navigation destination based on context
   const getBackDestination = () => {
     const from = searchParams.get('from');
-    return from === 'dashboard' ? '/dashboard' : '/';
+    if (from === 'intake') {
+      // If coming from intake, decide based on sign-in status
+      return isSignedIn ? '/dashboard' : '/';
+    }
+    if (from === 'dashboard') {
+      return '/dashboard';
+    }
+    // Default: if signed in, go to dashboard; otherwise go to home
+    return isSignedIn ? '/dashboard' : '/';
   };
 
   // Get back button text based on context
   const getBackButtonText = () => {
     const from = searchParams.get('from');
-    return from === 'dashboard' ? 'Back to Dashboard' : 'Back to Home';
+    if (from === 'intake') {
+      return isSignedIn ? 'Back to Dashboard' : 'Back to Home';
+    }
+    if (from === 'dashboard') {
+      return 'Back to Dashboard';
+    }
+    return isSignedIn ? 'Back to Dashboard' : 'Back to Home';
   };
 
   useEffect(() => {

@@ -108,20 +108,24 @@ export default function Dashboard() {
   const handleDeleteReport = async (reportId: string) => {
     setDeleting(true);
     try {
+      console.log('🗑️ [Dashboard] Attempting to delete report:', reportId);
       const response = await fetch(`/api/reports/${reportId}`, {
         method: 'DELETE',
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete report');
+        const errorData = await response.json();
+        console.error('❌ [Dashboard] Delete failed:', errorData);
+        throw new Error(errorData.error || 'Failed to delete report');
       }
 
+      console.log('✅ [Dashboard] Report deleted successfully');
       // Remove the report from the local state
       setReports(reports.filter(report => report.id !== reportId));
       setDeleteDialogOpen(false);
       setReportToDelete(null);
     } catch (error) {
-      console.error('Error deleting report:', error);
+      console.error('❌ [Dashboard] Error deleting report:', error);
       alert('Failed to delete report. Please try again.');
     } finally {
       setDeleting(false);
@@ -137,11 +141,11 @@ export default function Dashboard() {
   const getProfileInfo = () => {
     if (reports.length === 0) return null;
 
-    // Try to find the most recent report with LinkedIn data first
-    const linkedinReport = reports.find(r => r.profile.hasLinkedinData);
+    // Prioritize the most recent report with LinkedIn data
+    const linkedinReport = reports.find(r => r.profile.hasLinkedinData && r.linkedin_data);
     const latestReport = reports[0];
     
-    // Use LinkedIn data if available, otherwise fallback to latest report
+    // Use LinkedIn report if available and has good data, otherwise fallback to latest report
     const sourceReport = linkedinReport || latestReport;
     
     let profileInfo = {
@@ -152,25 +156,34 @@ export default function Dashboard() {
       dailyWorkSummary: sourceReport.profile.dailyWorkSummary || 'Not specified'
     };
 
-    // If we have LinkedIn data, try to extract more specific information
-    if (sourceReport.profile.hasLinkedinData && sourceReport.linkedin_data) {
+    // If we have LinkedIn data, extract the most valuable information
+    if (sourceReport.linkedin_data) {
       const linkedinData = sourceReport.linkedin_data;
+      console.log('📊 [Dashboard] Using LinkedIn data for profile:', linkedinData);
       
-      // Update with LinkedIn-specific data if available
-      if (linkedinData.currentTitle) {
-        profileInfo.currentRole = linkedinData.currentTitle;
+      // Prioritize LinkedIn job title for current role
+      if (linkedinData.jobTitle || linkedinData.currentTitle || linkedinData.title) {
+        profileInfo.currentRole = linkedinData.jobTitle || linkedinData.currentTitle || linkedinData.title;
       }
-      if (linkedinData.yearsExperience) {
-        profileInfo.yearsExperience = linkedinData.yearsExperience;
+      
+      // Extract years of experience from LinkedIn
+      if (linkedinData.totalExperience || linkedinData.yearsExperience) {
+        profileInfo.yearsExperience = `${linkedinData.totalExperience || linkedinData.yearsExperience} years`;
       }
-      if (linkedinData.skills && Array.isArray(linkedinData.skills)) {
+      
+      // Extract skills from LinkedIn
+      if (linkedinData.skills && Array.isArray(linkedinData.skills) && linkedinData.skills.length > 0) {
         profileInfo.keySkills = linkedinData.skills.slice(0, 5).join(', ');
       }
-      if (linkedinData.dailyTasks) {
-        profileInfo.dailyWorkSummary = linkedinData.dailyTasks;
-      }
+      
+      // Extract company size from LinkedIn
       if (linkedinData.companySize) {
         profileInfo.companySize = linkedinData.companySize;
+      }
+      
+      // Extract work description from LinkedIn
+      if (linkedinData.summary || linkedinData.workDescription) {
+        profileInfo.dailyWorkSummary = linkedinData.summary || linkedinData.workDescription;
       }
     }
 
@@ -310,37 +323,6 @@ export default function Dashboard() {
                 </Card>
               </div>
             )}
-
-            {/* Key Skills and Work Summary for Latest Assessment */}
-            {reports.length > 0 && profileInfo && (profileInfo.keySkills !== 'Not specified' || profileInfo.dailyWorkSummary !== 'Not specified') && (
-              <div className="grid gap-4 md:grid-cols-2 mb-6">
-                {profileInfo.keySkills !== 'Not specified' && (
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-medium text-slate-600">Your Key Skills</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-slate-700 leading-relaxed">
-                        {profileInfo?.keySkills}
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {profileInfo.dailyWorkSummary !== 'Not specified' && (
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-medium text-slate-600">Your Daily Work</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-slate-700 leading-relaxed">
-                        {profileInfo?.dailyWorkSummary}
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            )}
           </div>
 
           {/* Assessments Section */}
@@ -424,7 +406,7 @@ export default function Dashboard() {
                               )}
                             </div>
                           </div>
-                          <RiskScoreCircle score={report.score} size={60} />
+                          <RiskScoreCircle score={report.score} size={90} />
                         </div>
                       </CardHeader>
                       <CardContent className="pt-0">
@@ -467,6 +449,15 @@ export default function Dashboard() {
                             <span className="text-slate-600">Risk Score</span>
                             <span className="font-semibold">{report.score}/100</span>
                           </div>
+
+                          {/* View Report Button */}
+                          <Button 
+                            className="w-full mt-3" 
+                            onClick={() => router.push(`/report?id=${report.id}&paid=true&from=dashboard`)}
+                          >
+                            <FileText className="w-4 h-4 mr-2" />
+                            View Report
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>

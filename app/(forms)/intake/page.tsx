@@ -79,6 +79,7 @@ function IntakeContent() {
   const [result, setResult] = useState<AssessmentResult | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
 
   const form = useForm<AssessmentFormData>({
     resolver: zodResolver(assessmentSchema),
@@ -306,8 +307,11 @@ function IntakeContent() {
       setIsAnalyzing(false);
       clearInterval(stepInterval);
       
-      // Show user-friendly error message
+      // Set the analysis error state
       const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+      setAnalysisError(errorMessage);
+      
+      // Show user-friendly error message
       alert(`Assessment failed: ${errorMessage}\n\nPlease try again. If the problem persists, your assessment may still be processing in the background.`);
     }
   };
@@ -374,6 +378,41 @@ function IntakeContent() {
 
   const nextStep = () => {
     if (currentStep < 3) {
+      // Validate current step before proceeding
+      if (currentStep === 1) {
+        const basicFields = ['careerCategory', 'jobTitle', 'yearsExperience'];
+        const hasErrors = basicFields.some(field => {
+          const value = form.getValues(field as keyof AssessmentFormData);
+          return !value || value.trim() === '';
+        });
+        
+        if (hasErrors) {
+          // Trigger validation display
+          form.trigger(['careerCategory', 'jobTitle', 'yearsExperience']);
+          return;
+        }
+      }
+      
+      if (currentStep === 2) {
+        const workFields = ['dailyWorkSummary', 'linkedinUrl'];
+        const hasErrors = workFields.some(field => {
+          const value = form.getValues(field as keyof AssessmentFormData);
+          if (field === 'dailyWorkSummary') {
+            return !value || value.trim().length < 50;
+          }
+          if (field === 'linkedinUrl') {
+            return !value || value.trim() === '';
+          }
+          return false;
+        });
+        
+        if (hasErrors) {
+          // Trigger validation display
+          form.trigger(['dailyWorkSummary', 'linkedinUrl']);
+          return;
+        }
+      }
+      
       setCurrentStep(currentStep + 1);
     } else if (currentStep === 3) {
       form.handleSubmit(onSubmit)();
@@ -430,6 +469,10 @@ function IntakeContent() {
       .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold text-slate-900 mt-6 mb-4">$1</h1>')
       // Handle bold text
       .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-slate-900">$1</strong>')
+      // Handle markdown-style links [text](url) FIRST
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">$1</a>')
+      // Handle standalone URLs (http/https)
+      .replace(/(https?:\/\/[^\s<>"{}|\\^`[\]]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">$1</a>')
       // Handle bullet points
       .replace(/^- (.*$)/gim, '<li class="ml-4 mb-1 list-disc">$1</li>')
       .replace(/^\* (.*$)/gim, '<li class="ml-4 mb-1 list-disc">$1</li>')
@@ -772,28 +815,59 @@ function IntakeContent() {
             {/* Step 4: Analysis */}
             {currentStep === 4 && (
               <div className="text-center py-12">
-                <div className="animate-spin w-16 h-16 border-4 border-primary border-t-transparent rounded-full mx-auto mb-6"></div>
-                <h3 className="text-xl font-semibold text-slate-900 mb-6">AI Analysis in Progress</h3>
-                <div className="space-y-3 max-w-md mx-auto">
-                  {analysisSteps.map((step, index) => (
-                    <div
-                      key={index}
-                      className={`flex items-center justify-center text-sm ${
-                        index < analysisStep ? 'text-green-600' :
-                        index === analysisStep ? 'text-primary' : 'text-slate-400'
-                      }`}
-                    >
-                      {index < analysisStep ? (
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                      ) : index === analysisStep ? (
-                        <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin mr-2"></div>
-                      ) : (
-                        <div className="w-4 h-4 border-2 border-slate-300 rounded-full mr-2"></div>
-                      )}
-                      {step}
+                {analysisError ? (
+                  // Error state
+                  <div className="space-y-6">
+                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+                      <AlertTriangle className="w-8 h-8 text-red-600" />
                     </div>
-                  ))}
-                </div>
+                    <div>
+                      <h3 className="text-xl font-semibold text-red-900 mb-2">Analysis Failed</h3>
+                      <p className="text-red-700 mb-4">{analysisError}</p>
+                      <div className="space-y-2">
+                        <Button onClick={() => {
+                          setAnalysisError(null);
+                          setCurrentStep(3);
+                        }} variant="outline">
+                          Back to Review
+                        </Button>
+                        <Button onClick={() => {
+                          setAnalysisError(null);
+                          setIsAnalyzing(true);
+                          form.handleSubmit(onSubmit)();
+                        }}>
+                          Try Again
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  // Normal analysis state
+                  <>
+                    <div className="animate-spin w-16 h-16 border-4 border-primary border-t-transparent rounded-full mx-auto mb-6"></div>
+                    <h3 className="text-xl font-semibold text-slate-900 mb-6">AI Analysis in Progress</h3>
+                    <div className="space-y-3 max-w-md mx-auto">
+                      {analysisSteps.map((step, index) => (
+                        <div
+                          key={index}
+                          className={`flex items-center justify-center text-sm ${
+                            index < analysisStep ? 'text-green-600' :
+                            index === analysisStep ? 'text-primary' : 'text-slate-400'
+                          }`}
+                        >
+                          {index < analysisStep ? (
+                            <CheckCircle className="w-4 h-4 mr-2" />
+                          ) : index === analysisStep ? (
+                            <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin mr-2"></div>
+                          ) : (
+                            <div className="w-4 h-4 border-2 border-slate-300 rounded-full mr-2"></div>
+                          )}
+                          {step}
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
             )}
 
