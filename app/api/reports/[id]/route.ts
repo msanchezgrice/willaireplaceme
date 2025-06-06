@@ -5,8 +5,9 @@ export const runtime = 'nodejs';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const params = await context.params;
   console.log('📊 [Reports API] Fetching report for profile:', params.id);
   
   try {
