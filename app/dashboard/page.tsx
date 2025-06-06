@@ -17,7 +17,9 @@ import {
   FileText,
   Linkedin,
   Trash2,
-  MoreHorizontal
+  MoreHorizontal,
+  Menu,
+  X
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -66,6 +68,7 @@ export default function Dashboard() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [reportToDelete, setReportToDelete] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -244,18 +247,63 @@ export default function Dashboard() {
         <div className="bg-white border-b border-slate-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
-              <div className="flex items-center">
+              {/* Desktop Navigation */}
+              <div className="hidden sm:flex items-center">
                 <Button variant="ghost" onClick={() => router.push('/')} className="mr-4">
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Back to Home
                 </Button>
                 <h1 className="text-xl font-bold text-slate-900">Your Dashboard</h1>
               </div>
-              <Button onClick={() => router.push('/intake?from=dashboard')}>
-                <Plus className="w-4 h-4 mr-2" />
-                New Assessment
-              </Button>
+
+              {/* Mobile Navigation */}
+              <div className="flex sm:hidden items-center justify-between w-full">
+                <div className="flex items-center">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                    className="mr-2"
+                  >
+                    {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                  </Button>
+                  <h1 className="text-lg font-bold text-slate-900">Dashboard</h1>
+                </div>
+                <Button 
+                  size="sm" 
+                  onClick={() => router.push('/intake?from=dashboard')}
+                  className="flex-shrink-0"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  New
+                </Button>
+              </div>
+
+              {/* Desktop New Assessment Button */}
+              <div className="hidden sm:block">
+                <Button onClick={() => router.push('/intake?from=dashboard')}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  New Assessment
+                </Button>
+              </div>
             </div>
+
+            {/* Mobile Menu Dropdown */}
+            {mobileMenuOpen && (
+              <div className="sm:hidden border-t border-slate-200 py-2">
+                <Button 
+                  variant="ghost" 
+                  onClick={() => {
+                    router.push('/');
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full justify-start text-left"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Home
+                </Button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -271,16 +319,16 @@ export default function Dashboard() {
 
             {/* User Profile Summary Cards */}
             {reports.length > 0 && (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+              <div className="grid gap-4 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 mb-6">
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium text-slate-600">Current Role</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-lg font-semibold text-slate-900">
+                    <div className="text-base sm:text-lg font-semibold text-slate-900 truncate">
                       {profileInfo?.currentRole}
                     </div>
-                    <p className="text-xs text-slate-500 mt-1">
+                    <p className="text-xs text-slate-500 mt-1 truncate">
                       {reports[0]?.profile.careerCategory ? reports[0].profile.careerCategory.replace('-', ' ') : 'Latest assessment'}
                     </p>
                   </CardContent>
@@ -291,7 +339,7 @@ export default function Dashboard() {
                     <CardTitle className="text-sm font-medium text-slate-600">Experience Level</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-lg font-semibold text-slate-900">
+                    <div className="text-base sm:text-lg font-semibold text-slate-900">
                       {profileInfo?.yearsExperience}
                     </div>
                     <p className="text-xs text-slate-500 mt-1">Years of experience</p>
@@ -303,7 +351,7 @@ export default function Dashboard() {
                     <CardTitle className="text-sm font-medium text-slate-600">Company Size</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-lg font-semibold text-slate-900 capitalize">
+                    <div className="text-base sm:text-lg font-semibold text-slate-900 capitalize">
                       {profileInfo?.companySize}
                     </div>
                     <p className="text-xs text-slate-500 mt-1">Organization type</p>
@@ -315,7 +363,7 @@ export default function Dashboard() {
                     <CardTitle className="text-sm font-medium text-slate-600">AI Analysis</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-lg font-semibold text-slate-900">
+                    <div className="text-base sm:text-lg font-semibold text-slate-900">
                       {reports.filter(r => r.profile.hasLinkedinData).length}/{reports.length}
                     </div>
                     <p className="text-xs text-slate-500 mt-1">With LinkedIn data</p>
@@ -326,7 +374,7 @@ export default function Dashboard() {
 
             {/* Quick Stats */}
             {reports.length > 0 && (
-              <div className="grid gap-6 md:grid-cols-3 mb-8">
+              <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-3 mb-8">
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-base">Latest Score</CardTitle>
@@ -394,19 +442,19 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                 {reports.map((report) => {
                   const riskLevel = getRiskLevel(report.score);
                   return (
                     <Card key={report.id} className="hover:shadow-lg transition-shadow cursor-pointer">
-                      <CardHeader className="pb-4">
+                      <CardHeader className="pb-3 sm:pb-4">
                         <div className="flex items-start justify-between">
-                          <div className="flex-1">
+                          <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between">
-                              <CardTitle className="text-lg">{report.profile.role}</CardTitle>
+                              <CardTitle className="text-base sm:text-lg truncate">{report.profile.role}</CardTitle>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 flex-shrink-0">
                                     <span className="sr-only">Open menu</span>
                                     <MoreHorizontal className="h-4 w-4" />
                                   </Button>
@@ -430,20 +478,20 @@ export default function Dashboard() {
                               </DropdownMenu>
                             </div>
                             <CardDescription className="flex items-center mt-1">
-                              <Calendar className="w-4 h-4 mr-1" />
+                              <Calendar className="w-3 h-3 mr-1" />
                               {new Date(report.created_at).toLocaleDateString()}
                             </CardDescription>
                             
                             {/* Enhanced Profile Information */}
-                            <div className="mt-3 space-y-1 text-xs text-slate-600">
+                            <div className="mt-2 sm:mt-3 space-y-1 text-xs text-slate-600">
                               {report.profile.careerCategory && (
-                                <div>Category: {report.profile.careerCategory}</div>
+                                <div className="truncate">Category: {report.profile.careerCategory}</div>
                               )}
                               {report.profile.yearsExperience && (
-                                <div>Experience: {report.profile.yearsExperience}</div>
+                                <div className="truncate">Experience: {report.profile.yearsExperience}</div>
                               )}
                               {report.profile.companySize && (
-                                <div>Company: {report.profile.companySize}</div>
+                                <div className="truncate">Company: {report.profile.companySize}</div>
                               )}
                               {report.profile.hasLinkedinData && (
                                 <div className="flex items-center text-blue-600">
@@ -453,7 +501,10 @@ export default function Dashboard() {
                               )}
                             </div>
                           </div>
-                          <RiskScoreCircle score={report.score} size={90} />
+                          <div className="ml-3 flex-shrink-0">
+                            <RiskScoreCircle score={report.score} size={70} className="sm:hidden" />
+                            <RiskScoreCircle score={report.score} size={90} className="hidden sm:block" />
+                          </div>
                         </div>
                       </CardHeader>
                       <CardContent className="pt-0">

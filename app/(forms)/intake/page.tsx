@@ -75,7 +75,7 @@ function IntakeContent() {
   const { isSignedIn, isLoaded } = useUser();
   const [currentStep, setCurrentStep] = useState(1);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisStep, setAnalysisStep] = useState(0);
+  const [analysisStepIndex, setAnalysisStepIndex] = useState(0);
   const [result, setResult] = useState<AssessmentResult | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -100,23 +100,23 @@ function IntakeContent() {
     
     setIsAnalyzing(true);
     setCurrentStep(4);
+    setAnalysisStepIndex(0);
     
-    // Simulate analysis steps
-    const steps = [
-      "Processing your profile information",
-      "Researching AI developments in your field", 
-      "Calculating risk factors and timeline",
-      "Generating personalized recommendations"
+    // Updated carousel steps that can loop
+    const analysisSteps = [
+      "Analyzing your professional profile",
+      "Researching AI trends in your field", 
+      "Evaluating automation risk factors",
+      "Generating personalized insights",
+      "Finalizing your career assessment",
+      "Compiling risk analysis data",
+      "Preparing actionable recommendations"
     ];
     
-    let stepIndex = 0;
+    // Carousel that loops through steps until analysis completes
     const stepInterval = setInterval(() => {
-      setAnalysisStep(stepIndex);
-      stepIndex++;
-      if (stepIndex > steps.length) {
-        clearInterval(stepInterval);
-      }
-    }, 1500);
+      setAnalysisStepIndex(prev => (prev + 1) % 7); // 7 steps total
+    }, 2000); // Slower, 2-second intervals
 
     try {
       // Convert form data to match API expectations
@@ -446,18 +446,18 @@ function IntakeContent() {
     return { label: "High Risk", color: "text-red-600", bgColor: "bg-red-100" };
   };
 
-  const analysisSteps = [
-    "Processing your profile information",
-    "Researching AI developments in your field",
-    "Calculating risk factors and timeline", 
-    "Generating personalized recommendations"
-  ];
-
   // Function to render markdown preview content
   const renderPreview = (content: string) => {
     if (!content) return '';
     
-    return content
+    // Limit content to approximately 750 words
+    const wordLimit = 750;
+    const words = content.split(/\s+/);
+    const limitedContent = words.length > wordLimit 
+      ? words.slice(0, wordLimit).join(' ') + '...'
+      : content;
+    
+    return limitedContent
       // Remove all section markers and headers
       .replace(/\*\*SECTION \d+: PREVIEW\*\*/g, '')
       .replace(/SECTION \d+: PREVIEW/g, '')
@@ -469,15 +469,22 @@ function IntakeContent() {
       .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold text-slate-900 mt-6 mb-4">$1</h1>')
       // Handle bold text
       .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-slate-900">$1</strong>')
+      // Handle italic text
+      .replace(/\*(.*?)\*/g, '<em class="italic text-slate-700">$1</em>')
       // Handle markdown-style links [text](url) FIRST
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">$1</a>')
-      // Handle standalone URLs (http/https)
-      .replace(/(https?:\/\/[^\s<>"{}|\\^`[\]]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">$1</a>')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline font-medium">$1</a>')
+      // Handle standalone URLs (http/https) - avoid double processing
+      .replace(/(?<!href="|">|class=")https?:\/\/[^\s<>"{}|\\^`[\]]+/g, (url) => {
+        // Clean up the URL (remove trailing punctuation)
+        const cleanUrl = url.replace(/[.,;:)]+$/, '');
+        const domain = cleanUrl.replace(/https?:\/\//, '').replace(/\/.*/, '');
+        return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline font-medium">${domain}</a>`;
+      })
       // Handle bullet points
-      .replace(/^- (.*$)/gim, '<li class="ml-4 mb-1 list-disc">$1</li>')
-      .replace(/^\* (.*$)/gim, '<li class="ml-4 mb-1 list-disc">$1</li>')
+      .replace(/^- (.*$)/gim, '<li class="ml-4 mb-1 list-disc text-slate-700">$1</li>')
+      .replace(/^\* (.*$)/gim, '<li class="ml-4 mb-1 list-disc text-slate-700">$1</li>')
       // Handle numbered lists
-      .replace(/^\d+\. (.*$)/gim, '<li class="ml-4 mb-1 list-decimal">$1</li>')
+      .replace(/^\d+\. (.*$)/gim, '<li class="ml-4 mb-1 list-decimal text-slate-700">$1</li>')
       // Handle line breaks and create paragraphs
       .split('\n\n')
       .map(paragraph => paragraph.trim())
@@ -842,29 +849,44 @@ function IntakeContent() {
                     </div>
                   </div>
                 ) : (
-                  // Normal analysis state
+                  // Normal analysis state with carousel
                   <>
                     <div className="animate-spin w-16 h-16 border-4 border-primary border-t-transparent rounded-full mx-auto mb-6"></div>
                     <h3 className="text-xl font-semibold text-slate-900 mb-6">AI Analysis in Progress</h3>
-                    <div className="space-y-3 max-w-md mx-auto">
-                      {analysisSteps.map((step, index) => (
-                        <div
-                          key={index}
-                          className={`flex items-center justify-center text-sm ${
-                            index < analysisStep ? 'text-green-600' :
-                            index === analysisStep ? 'text-primary' : 'text-slate-400'
-                          }`}
-                        >
-                          {index < analysisStep ? (
-                            <CheckCircle className="w-4 h-4 mr-2" />
-                          ) : index === analysisStep ? (
-                            <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin mr-2"></div>
-                          ) : (
-                            <div className="w-4 h-4 border-2 border-slate-300 rounded-full mr-2"></div>
-                          )}
-                          {step}
+                    
+                    {/* Carousel Display */}
+                    <div className="max-w-md mx-auto">
+                      <div className="bg-blue-50 rounded-lg px-6 py-4 transition-all duration-500 ease-in-out">
+                        <div className="flex items-center justify-center text-primary">
+                          <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin mr-3"></div>
+                          <span className="text-sm font-medium">
+                            {isAnalyzing && (() => {
+                              const steps = [
+                                "Analyzing your professional profile",
+                                "Researching AI trends in your field", 
+                                "Evaluating automation risk factors",
+                                "Generating personalized insights",
+                                "Finalizing your career assessment",
+                                "Compiling risk analysis data",
+                                "Preparing actionable recommendations"
+                              ];
+                              return steps[analysisStepIndex] || steps[0];
+                            })()}
+                          </span>
                         </div>
-                      ))}
+                      </div>
+                      
+                      {/* Progress dots */}
+                      <div className="flex justify-center mt-4 space-x-1">
+                        {[...Array(7)].map((_, index) => (
+                          <div
+                            key={index}
+                            className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                              index === analysisStepIndex ? 'bg-primary' : 'bg-slate-300'
+                            }`}
+                          />
+                        ))}
+                      </div>
                     </div>
                   </>
                 )}
