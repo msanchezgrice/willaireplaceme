@@ -489,55 +489,24 @@ Return ONLY the JSON object. Do not include explanatory text before or after the
           evidence.linkedinProfile = linkedinData;
         }
 
-        console.log('🔥 [Research API] Calling analyze API via HTTP request...');
+        console.log('🔥 [Research API] Calling analyze function directly...');
         
-        // Construct the base URL more reliably
-        const baseUrl = process.env.VERCEL_URL 
-          ? `https://${process.env.VERCEL_URL}`
-          : process.env.NODE_ENV === 'production'
-          ? 'https://willaireplace.me'
-          : 'http://localhost:3000';
-        
-        console.log('🌐 [Research API] Using base URL:', baseUrl);
-        console.log('📦 [Research API] Sending payload:', {
-          profile_id: profile.id,
-          evidence_keys: Object.keys(evidence),
-          evidence_size: JSON.stringify(evidence).length
-        });
-        
-        // Make HTTP request to analyze API instead of direct import to avoid edge runtime issues
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 600000); // 10 minute timeout
-        
-        const analyzeResponse = await fetch(`${baseUrl}/api/analyze`, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'User-Agent': 'CareerGuard/1.0'
-          },
-          body: JSON.stringify({ profile_id: profile.id, evidence }),
-          signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-
-        console.log('📡 [Research API] Analyze API response status:', analyzeResponse.status);
-        console.log('📡 [Research API] Analyze API response headers:', Object.fromEntries(analyzeResponse.headers.entries()));
-
-        if (!analyzeResponse.ok) {
-          const errorText = await analyzeResponse.text();
-          console.error('❌ [Research API] Analysis failed:', analyzeResponse.status, errorText);
-          console.error('❌ [Research API] Failed request details:', {
-            url: `${baseUrl}/api/analyze`,
-            status: analyzeResponse.status,
-            statusText: analyzeResponse.statusText,
-            headers: Object.fromEntries(analyzeResponse.headers.entries())
+        try {
+          // Use shared analyze function to avoid HTTP auth issues
+          const { performAnalysis } = await import('../../../lib/analyze-core');
+          
+          console.log('📦 [Research API] Calling analyze function with payload:', {
+            profile_id: profile.id,
+            evidence_keys: Object.keys(evidence),
+            evidence_size: JSON.stringify(evidence).length
           });
-          throw new Error(`Analysis failed: ${analyzeResponse.status} ${errorText}`);
-        }
 
-        const result = await analyzeResponse.json();
-        console.log('✅ [Research API] Background analysis completed successfully:', result);
+          const result = await performAnalysis(profile.id, evidence);
+          console.log('✅ [Research API] Background analysis completed successfully:', result);
+        } catch (importError) {
+          console.error('❌ [Research API] Analysis function failed:', importError);
+          throw importError;
+        }
       } catch (analysisError) {
         console.error('💥 [Research API] Background analysis failed:', analysisError);
         console.error('📚 [Research API] Analysis error details:', {
