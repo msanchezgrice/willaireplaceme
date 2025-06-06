@@ -4,8 +4,8 @@ import { auth } from '@clerk/nextjs/server';
 import OpenAI from 'openai';
 import { researchPrompt, linkedinPrompt } from '@/server/promptTemplates';
 
-export const runtime = 'edge';
-export const maxDuration = 800; // 13.33 minutes - maximum allowed for current Vercel plan
+export const runtime = 'nodejs';
+export const maxDuration = 300; // 5 minutes - Node.js runtime allows longer duration
 
 // Function to sanitize text for database insertion
 function sanitizeText(text: string): string {
@@ -441,6 +441,7 @@ export async function POST(req: NextRequest) {
     
     // Don't wait for analysis to complete - start it in background and return immediately
     (async () => {
+      console.log('🟢 [Background Analysis] Node.js runtime background function started!');
       try {
         console.log('🔄 [Background Analysis] Background analysis started for profile:', profile.id);
         console.log('📝 [Background Analysis] Generating research prompt...');
