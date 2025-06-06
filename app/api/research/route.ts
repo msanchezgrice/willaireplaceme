@@ -257,12 +257,26 @@ export async function POST(req: NextRequest) {
   console.log('🔍 [Research API] Starting request...');
   
   try {
-    // Get the current user from Clerk
-    const { userId, sessionId } = await auth();
-    console.log('👤 [Research API] User authentication:', { userId, hasSession: !!sessionId });
+    // Get the current user from Clerk with improved error handling
+    let userId = null;
+    let sessionId = null;
+    
+    try {
+      const authResult = await auth();
+      userId = authResult.userId;
+      sessionId = authResult.sessionId;
+      console.log('👤 [Research API] User authentication:', { 
+        userId, 
+        hasSession: !!sessionId,
+        authResult: authResult 
+      });
+    } catch (authError) {
+      console.error('⚠️ [Research API] Authentication failed:', authError);
+      console.log('👤 [Research API] Continuing without user authentication');
+    }
     
     const body = await req.json();
-    console.log('📋 [Research API] Request body:', JSON.stringify(body, null, 2));
+    console.log('📋 [Research API] Request body keys:', Object.keys(body));
     
     const { role, tasks, resume, linkedinUrl, profileData, uploadedFile } = body;
 
@@ -485,8 +499,16 @@ Return ONLY the JSON object. Do not include explanatory text before or after the
           : 'http://localhost:3000';
         
         console.log('🌐 [Research API] Using base URL:', baseUrl);
+        console.log('📦 [Research API] Sending payload:', {
+          profile_id: profile.id,
+          evidence_keys: Object.keys(evidence),
+          evidence_size: JSON.stringify(evidence).length
+        });
         
         // Make HTTP request to analyze API instead of direct import to avoid edge runtime issues
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 600000); // 10 minute timeout
+        
         const analyzeResponse = await fetch(`${baseUrl}/api/analyze`, {
           method: 'POST',
           headers: { 
@@ -494,14 +516,23 @@ Return ONLY the JSON object. Do not include explanatory text before or after the
             'User-Agent': 'CareerGuard/1.0'
           },
           body: JSON.stringify({ profile_id: profile.id, evidence }),
-          signal: AbortSignal.timeout(600000) // 10 minute timeout for analysis
+          signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
 
         console.log('📡 [Research API] Analyze API response status:', analyzeResponse.status);
+        console.log('📡 [Research API] Analyze API response headers:', Object.fromEntries(analyzeResponse.headers.entries()));
 
         if (!analyzeResponse.ok) {
           const errorText = await analyzeResponse.text();
           console.error('❌ [Research API] Analysis failed:', analyzeResponse.status, errorText);
+          console.error('❌ [Research API] Failed request details:', {
+            url: `${baseUrl}/api/analyze`,
+            status: analyzeResponse.status,
+            statusText: analyzeResponse.statusText,
+            headers: Object.fromEntries(analyzeResponse.headers.entries())
+          });
           throw new Error(`Analysis failed: ${analyzeResponse.status} ${errorText}`);
         }
 
@@ -509,6 +540,29 @@ Return ONLY the JSON object. Do not include explanatory text before or after the
         console.log('✅ [Research API] Background analysis completed successfully:', result);
       } catch (analysisError) {
         console.error('💥 [Research API] Background analysis failed:', analysisError);
+        console.error('📚 [Research API] Analysis error details:', {
+          error: analysisError instanceof Error ? analysisError.message : String(analysisError),
+          stack: analysisError instanceof Error ? analysisError.stack : 'No stack trace',
+          name: analysisError instanceof Error ? analysisError.name : 'Unknown error type',
+          profile_id: profile.id
+        });
+        
+        // Try to save error info to database for debugging
+        try {
+          await supabase
+            .from('profiles')
+            .update({ 
+              profile_data: { 
+                ...profileData,
+                analysis_error: analysisError instanceof Error ? analysisError.message : String(analysisError),
+                analysis_error_time: new Date().toISOString()
+              }
+            })
+            .eq('id', profile.id);
+          console.log('📝 [Research API] Error info saved to profile for debugging');
+        } catch (saveError) {
+          console.error('❌ [Research API] Could not save error info:', saveError);
+        }
       }
     })(); // Start analysis in background without waiting
 
