@@ -14,7 +14,6 @@ import {
   Bot, 
   ChartLine, 
   Clock, 
-  Shield, 
   Users, 
   CheckCircle,
   Star,
@@ -702,7 +701,7 @@ export default function Home() {
 
           <div className="text-center mt-6 sm:mt-8">
             <p className="text-slate-600">
-              Secure signup • Instant delivery • No spam ever
+              Instant delivery • No spam ever
             </p>
           </div>
         </div>

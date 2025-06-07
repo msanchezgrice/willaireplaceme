@@ -116,6 +116,47 @@ function IntakeContent() {
   // Watch the career category to show/hide custom input
   const selectedCareerCategory = form.watch('careerCategory');
 
+  // Career-specific configurations
+  const careerConfigs = {
+    'designer': {
+      name: 'Designer',
+      description: 'UI/UX, Graphic, Product Design',
+      jobTitlePlaceholder: 'e.g., Senior UX Designer, Product Designer, Graphic Designer',
+      workSummaryPlaceholder: 'Describe your design process, tools you use (Figma, Sketch, Adobe Creative Suite), daily tasks like user research, wireframing, prototyping, stakeholder meetings, design reviews...',
+      skillsPlaceholder: 'e.g., Figma, Sketch, Adobe Creative Suite, User Research, Prototyping, Design Systems, Interaction Design...'
+    },
+    'product-manager': {
+      name: 'Product Manager',
+      description: 'Product Strategy, Roadmapping, Stakeholder Management',
+      jobTitlePlaceholder: 'e.g., Senior Product Manager, Product Owner, Associate PM',
+      workSummaryPlaceholder: 'Describe your product management activities like roadmap planning, user story writing, stakeholder meetings, data analysis, feature prioritization, sprint planning...',
+      skillsPlaceholder: 'e.g., Jira, Confluence, Product Analytics, User Research, Roadmapping, Agile/Scrum, SQL, Stakeholder Management...'
+    },
+    'marketing': {
+      name: 'Marketing',
+      description: 'Content, Digital Marketing, SEO, Campaign Management',
+      jobTitlePlaceholder: 'e.g., Marketing Manager, Content Marketer, Digital Marketing Specialist',
+      workSummaryPlaceholder: 'Describe your marketing activities like content creation, campaign management, social media strategy, SEO optimization, analytics reporting, lead generation...',
+      skillsPlaceholder: 'e.g., Google Analytics, HubSpot, Content Creation, SEO/SEM, Social Media Marketing, Email Marketing, Adobe Creative Suite...'
+    },
+    'accounting': {
+      name: 'Accounting',
+      description: 'Bookkeeping, Financial Analysis, Tax Preparation',
+      jobTitlePlaceholder: 'e.g., Staff Accountant, Financial Analyst, Bookkeeper, CPA',
+      workSummaryPlaceholder: 'Describe your accounting work like bookkeeping, financial reporting, tax preparation, accounts payable/receivable, financial analysis, auditing...',
+      skillsPlaceholder: 'e.g., QuickBooks, Excel, SAP, Financial Reporting, Tax Software, Bookkeeping, Financial Analysis, Audit...'
+    },
+    'legal': {
+      name: 'Legal',
+      description: 'Contract Review, Research, Document Preparation',
+      jobTitlePlaceholder: 'e.g., Attorney, Legal Counsel, Paralegal, Legal Assistant',
+      workSummaryPlaceholder: 'Describe your legal work like contract review, legal research, document drafting, client consultation, case preparation, regulatory compliance...',
+      skillsPlaceholder: 'e.g., Legal Research Databases, Contract Review, Document Drafting, Client Relations, Case Management Software...'
+    }
+  };
+
+  const currentCareerConfig = selectedCareerCategory && selectedCareerCategory !== '' && careerConfigs[selectedCareerCategory as keyof typeof careerConfigs] ? careerConfigs[selectedCareerCategory as keyof typeof careerConfigs] : undefined;
+
   const onSubmit = async (data: AssessmentFormData) => {
     console.log('🚀 [Frontend] Starting assessment submission...');
     console.log('📋 [Frontend] Form data:', data);
@@ -556,6 +597,19 @@ function IntakeContent() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        {/* Career-Specific Header */}
+        {currentCareerConfig && (
+          <div className="mb-6 text-center">
+            <div className="inline-flex items-center bg-blue-50 text-blue-700 px-4 py-2 rounded-full text-sm font-medium mb-2">
+              <span className="mr-2">🎯</span>
+              {currentCareerConfig.name} Risk Assessment
+            </div>
+            <p className="text-slate-600">
+              Specialized analysis for {currentCareerConfig.description.toLowerCase()}
+            </p>
+          </div>
+        )}
+
         <Card className="shadow-xl">
           <CardHeader>
             <div className="flex justify-between items-center mb-4">
@@ -586,7 +640,7 @@ function IntakeContent() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Career Category</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select your career category" />
@@ -630,7 +684,10 @@ function IntakeContent() {
                       <FormItem>
                         <FormLabel>Job Title</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g., Senior UX Designer" {...field} />
+                          <Input 
+                            placeholder={currentCareerConfig?.jobTitlePlaceholder || "e.g., Senior UX Designer"} 
+                            {...field} 
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -702,7 +759,7 @@ function IntakeContent() {
                         <FormControl>
                           <Textarea
                             rows={6}
-                            placeholder="Describe what you do on a typical day at work. Include specific tasks, tools you use, and responsibilities..."
+                            placeholder={currentCareerConfig?.workSummaryPlaceholder || "Describe what you do on a typical day at work. Include specific tasks, tools you use, and responsibilities..."}
                             {...field}
                           />
                         </FormControl>
@@ -723,7 +780,7 @@ function IntakeContent() {
                         <FormControl>
                           <Textarea
                             rows={4}
-                            placeholder="List your main skills, software tools, and technologies you work with regularly..."
+                            placeholder={currentCareerConfig?.skillsPlaceholder || "List your main skills, software tools, and technologies you work with regularly..."}
                             {...field}
                           />
                         </FormControl>
