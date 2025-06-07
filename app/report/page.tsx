@@ -210,6 +210,47 @@ function ReportContent() {
         const data = await response.json();
         console.log('✅ [Report Page] Report loaded successfully');
         setReportData(data);
+        
+        // Update page title and meta tags for social sharing
+        if (data.score) {
+          const riskLevel = getRiskLevel(data.score);
+          const title = `My AI Career Risk Assessment - ${data.score}/100 (${riskLevel.label})`;
+          const description = `I just completed my AI replacement risk assessment! My risk score is ${data.score}/100 (${riskLevel.label}). Get your personalized analysis and strategies to future-proof your career.`;
+          
+          document.title = title;
+          
+          // Update meta description
+          const metaDescription = document.querySelector('meta[name="description"]');
+          if (metaDescription) {
+            metaDescription.setAttribute('content', description);
+          } else {
+            const meta = document.createElement('meta');
+            meta.name = 'description';
+            meta.content = description;
+            document.head.appendChild(meta);
+          }
+          
+          // Update Open Graph tags
+          const updateOrCreateMetaTag = (property: string, content: string) => {
+            let metaTag = document.querySelector(`meta[property="${property}"]`);
+            if (metaTag) {
+              metaTag.setAttribute('content', content);
+            } else {
+              metaTag = document.createElement('meta');
+              metaTag.setAttribute('property', property);
+              metaTag.setAttribute('content', content);
+              document.head.appendChild(metaTag);
+            }
+          };
+          
+          updateOrCreateMetaTag('og:title', title);
+          updateOrCreateMetaTag('og:description', description);
+          updateOrCreateMetaTag('og:url', window.location.href);
+          updateOrCreateMetaTag('og:image', `${window.location.origin}/Website-screenshot.png`);
+          updateOrCreateMetaTag('twitter:title', title);
+          updateOrCreateMetaTag('twitter:description', description);
+          updateOrCreateMetaTag('twitter:image', `${window.location.origin}/Website-screenshot.png`);
+        }
       } catch (err) {
         console.error('❌ [Report Page] Error fetching report:', err);
         setError('Failed to load report');
