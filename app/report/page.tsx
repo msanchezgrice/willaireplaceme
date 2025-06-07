@@ -20,8 +20,19 @@ import {
   Shield,
   BookOpen,
   Calendar,
-  Lightbulb
+  Lightbulb,
+  Copy,
+  Twitter,
+  Linkedin,
+  Facebook
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // Prevent static generation for this page
 export const dynamic = 'force-dynamic';
@@ -34,6 +45,40 @@ interface ReportData {
   evidence: any;
   created_at: string;
 }
+
+// Social sharing utilities
+const generateShareText = (score: number, riskLevel: string) => {
+  return `I just completed my AI career risk assessment! 🤖
+
+My AI replacement risk score: ${score}/100 (${riskLevel})
+
+Find out your risk level and get personalized strategies to future-proof your career 👇`;
+};
+
+const shareToTwitter = (text: string, url: string) => {
+  const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+  window.open(twitterUrl, '_blank', 'width=550,height=420');
+};
+
+const shareToLinkedIn = (title: string, summary: string, url: string) => {
+  const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
+  window.open(linkedinUrl, '_blank', 'width=550,height=420');
+};
+
+const shareToFacebook = (url: string) => {
+  const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+  window.open(facebookUrl, '_blank', 'width=550,height=420');
+};
+
+const copyToClipboard = async (text: string) => {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (err) {
+    console.error('Failed to copy: ', err);
+    return false;
+  }
+};
 
 // Markdown renderer component
 function MarkdownContent({ content }: { content: string }) {
@@ -197,20 +242,66 @@ function ReportContent() {
   };
 
   const handleShare = async () => {
-    if (navigator.share && reportData) {
+    if (!reportData) return;
+    
+    const shareUrl = window.location.href;
+    const riskLevel = getRiskLevel(reportData.score);
+    
+    // Check if native sharing is available
+    if (typeof navigator !== 'undefined' && 'share' in navigator) {
       try {
         await navigator.share({
           title: 'My AI Career Risk Assessment',
-          text: `I just completed my AI replacement risk assessment. My risk score is ${reportData.score}/100.`,
-          url: window.location.href,
+          text: generateShareText(reportData.score, riskLevel.label),
+          url: shareUrl,
         });
       } catch (err) {
-        console.log('Error sharing:', err);
+        if (err instanceof Error && err.name !== 'AbortError') {
+          console.log('Native sharing failed, falling back to copy:', err);
+          // Fallback to copy
+          const shareText = `${generateShareText(reportData.score, riskLevel.label)}\n\n${shareUrl}`;
+          const copied = await copyToClipboard(shareText);
+          if (copied) {
+            alert('✅ Share text copied to clipboard!');
+          }
+        }
       }
     } else {
       // Fallback: copy to clipboard
-      navigator.clipboard.writeText(window.location.href);
-      alert('Link copied to clipboard!');
+      const shareText = `${generateShareText(reportData.score, riskLevel.label)}\n\n${shareUrl}`;
+      const copied = await copyToClipboard(shareText);
+      if (copied) {
+        alert('✅ Share text copied to clipboard!');
+      }
+    }
+  };
+
+  const handleShareDropdown = async (platform: string) => {
+    if (!reportData) return;
+    
+    const shareUrl = window.location.href;
+    const riskLevel = getRiskLevel(reportData.score);
+    const shareText = generateShareText(reportData.score, riskLevel.label);
+    
+    switch (platform) {
+      case 'twitter':
+        shareToTwitter(shareText, shareUrl);
+        break;
+      case 'linkedin':
+        shareToLinkedIn('My AI Career Risk Assessment', shareText, shareUrl);
+        break;
+      case 'facebook':
+        shareToFacebook(shareUrl);
+        break;
+      case 'copy':
+        const fullText = `${shareText}\n\n${shareUrl}`;
+        const copied = await copyToClipboard(fullText);
+        if (copied) {
+          alert('✅ Share text copied to clipboard!');
+        }
+        break;
+      default:
+        handleShare();
     }
   };
 
@@ -414,10 +505,42 @@ function ReportContent() {
               <h1 className="text-xl font-bold text-slate-900">Your AI Risk Assessment</h1>
             </div>
             <div className="flex items-center space-x-2">
-              <Button variant="outline" size="sm" onClick={handleShare}>
-                <Share2 className="w-4 h-4 mr-2" />
-                Share
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Share2 className="w-4 h-4 mr-2" />
+                    Share
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => handleShareDropdown('copy')}>
+                    <Copy className="mr-2 h-4 w-4" />
+                    Copy Link
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => handleShareDropdown('twitter')}>
+                    <Twitter className="mr-2 h-4 w-4" />
+                    Share on Twitter
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleShareDropdown('linkedin')}>
+                    <Linkedin className="mr-2 h-4 w-4" />
+                    Share on LinkedIn
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleShareDropdown('facebook')}>
+                    <Facebook className="mr-2 h-4 w-4" />
+                    Share on Facebook
+                  </DropdownMenuItem>
+                  {typeof navigator !== 'undefined' && 'share' in navigator && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleShare}>
+                        <Share2 className="mr-2 h-4 w-4" />
+                        More Options
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button variant="outline" size="sm" onClick={handleDownload}>
                 <Download className="w-4 h-4 mr-2" />
                 Download
@@ -504,57 +627,99 @@ function ReportContent() {
                 </CardContent>
               </Card>
 
-              {/* Full Report Section */}
+              {/* Share Card */}
+              <Card className="border-primary/20 bg-blue-50/50">
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Share2 className="w-5 h-5 mr-2 text-primary" />
+                    Share Your Results
+                  </CardTitle>
+                  <CardDescription>
+                    Help others discover their AI career risk
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-sm text-slate-600">
+                    Share your assessment results with friends and colleagues to help them understand their own AI replacement risk.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Button 
+                      variant="default" 
+                      onClick={() => handleShareDropdown('twitter')}
+                      className="flex-1"
+                    >
+                      <Twitter className="w-4 h-4 mr-2" />
+                      Share on Twitter
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => handleShareDropdown('linkedin')}
+                      className="flex-1"
+                    >
+                      <Linkedin className="w-4 h-4 mr-2" />
+                      Share on LinkedIn
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => handleShareDropdown('copy')}
+                      className="flex-1"
+                    >
+                      <Copy className="w-4 h-4 mr-2" />
+                      Copy Link
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Full Report Content - Only for paid users */}
               {isPaid && reportData.full_report && (
-                <>
-                  <Card id="complete-analysis">
-                    <CardHeader>
-                      <CardTitle className="flex items-center">
-                        <BookOpen className="w-5 h-5 mr-2" />
-                        Complete Analysis
-                      </CardTitle>
-                      <CardDescription>
-                        Detailed assessment with recommendations and action plan
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <MarkdownContent content={reportData.full_report} />
-                    </CardContent>
-                  </Card>
-
-                  {/* Action Plan Section - Extract from full report if it contains action plan */}
-                  <Card id="action-plan">
-                    <CardHeader>
-                      <CardTitle className="flex items-center">
-                        <Target className="w-5 h-5 mr-2" />
-                        Action Plan
-                      </CardTitle>
-                      <CardDescription>
-                        Specific steps to future-proof your career
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <MarkdownContent content={getActionPlanContent(reportData.full_report)} />
-                    </CardContent>
-                  </Card>
-
-                  {/* Skill Development Section */}
-                  <Card id="skill-development">
-                    <CardHeader>
-                      <CardTitle className="flex items-center">
-                        <TrendingUp className="w-5 h-5 mr-2" />
-                        Skill Development
-                      </CardTitle>
-                      <CardDescription>
-                        Recommended skills and learning paths
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <MarkdownContent content={getSkillDevelopmentContent(reportData.full_report)} />
-                    </CardContent>
-                  </Card>
-                </>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <BookOpen className="w-5 h-5 mr-2" />
+                      Complete Analysis
+                    </CardTitle>
+                    <CardDescription>
+                      Your comprehensive AI replacement risk assessment
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <MarkdownContent content={reportData.full_report} />
+                  </CardContent>
+                </Card>
               )}
+
+              {/* Action Plan Section - Extract from full report if it contains action plan */}
+              <Card id="action-plan">
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Target className="w-5 h-5 mr-2" />
+                    Action Plan
+                  </CardTitle>
+                  <CardDescription>
+                    Specific steps to future-proof your career
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <MarkdownContent content={getActionPlanContent(reportData.full_report)} />
+                </CardContent>
+              </Card>
+
+              {/* Skill Development Section */}
+              <Card id="skill-development">
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <TrendingUp className="w-5 h-5 mr-2" />
+                    Skill Development
+                  </CardTitle>
+                  <CardDescription>
+                    Recommended skills and learning paths
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <MarkdownContent content={getSkillDevelopmentContent(reportData.full_report)} />
+                </CardContent>
+              </Card>
 
               {/* Upgrade CTA for non-paid users */}
               {!isPaid && (
