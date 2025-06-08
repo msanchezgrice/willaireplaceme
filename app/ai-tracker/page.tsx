@@ -238,8 +238,6 @@ export default function AITrackerPage() {
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-8">
                 <Link href="/" className="text-slate-600 hover:text-slate-900 px-3 py-2 text-sm font-medium transition-colors">Home</Link>
-                <Link href="/#how-it-works" className="text-slate-600 hover:text-slate-900 px-3 py-2 text-sm font-medium transition-colors">How It Works</Link>
-                <Link href="/#careers" className="text-slate-600 hover:text-slate-900 px-3 py-2 text-sm font-medium transition-colors">Career Categories</Link>
                 <Link href="/ai-tracker" className="text-slate-900 bg-slate-100 px-3 py-2 text-sm font-medium rounded-md">
                   AI Capability Tracker
                 </Link>

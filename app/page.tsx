@@ -180,15 +180,12 @@ export default function Home() {
             </div>
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-8">
-                <a href="#how-it-works" className="text-slate-600 hover:text-slate-900 px-3 py-2 text-sm font-medium transition-colors">How It Works</a>
-                <a href="#careers" className="text-slate-600 hover:text-slate-900 px-3 py-2 text-sm font-medium transition-colors">Career Categories</a>
                 <Link href="/ai-tracker" className="text-slate-600 hover:text-slate-900 px-3 py-2 text-sm font-medium transition-colors">
                   AI Capability Tracker
                 </Link>
                 <Link href="/industry-risk-tracker" className="text-slate-600 hover:text-slate-900 px-3 py-2 text-sm font-medium transition-colors">
                   Industry Risk Tracker
                 </Link>
-                <a className="text-slate-600 hover:text-slate-900 px-3 py-2 text-sm font-medium transition-colors">Pricing</a>
                 
                 {/* Authentication Section */}
                 {isLoaded && (
