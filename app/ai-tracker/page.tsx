@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { createClient } from '@supabase/supabase-js';
-import { ExternalLink, Filter, Search, ArrowUpDown } from 'lucide-react';
+import { ExternalLink, Filter, Search, ArrowUpDown, Bot } from 'lucide-react';
 
 interface AICapability {
   id: string;
@@ -213,28 +213,46 @@ export default function AITrackerPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header */}
-      <div className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-8 py-12">
+      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
+        <div className="max-w-7xl mx-auto px-8 py-16">
           <div className="text-center">
-            <h1 className="text-4xl font-bold text-slate-900 mb-4">
+            <div className="inline-flex items-center bg-blue-600/20 text-blue-200 px-4 py-2 rounded-full text-sm font-medium mb-6">
+              <Bot className="w-4 h-4 mr-2" />
+              Real-time AI Capability Database
+            </div>
+            <h1 className="text-5xl font-bold mb-6">
               🤖 AI Capability Tracker
             </h1>
-            <p className="text-xl text-slate-600 max-w-3xl mx-auto">
+            <p className="text-xl text-slate-300 max-w-4xl mx-auto mb-8 leading-relaxed">
               Explore how AI tools are transforming specific workflows across industries. 
               Track replacement risks and discover which tasks are being automated or enhanced.
             </p>
-            <div className="mt-6 flex justify-center space-x-8 text-sm">
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                <span className="text-slate-600">{capabilities.filter(c => c.risk_level === 'Low').length} Low Risk Tasks</span>
+            
+            {/* Enhanced Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
+                <div className="text-3xl font-bold text-green-400">
+                  {capabilities.filter(c => c.risk_level === 'Low').length}
+                </div>
+                <div className="text-sm text-slate-300 mt-1">Low Risk Tasks</div>
               </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                <span className="text-slate-600">{capabilities.filter(c => c.risk_level === 'Moderate').length} Moderate Risk Tasks</span>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
+                <div className="text-3xl font-bold text-yellow-400">
+                  {capabilities.filter(c => c.risk_level === 'Moderate').length}
+                </div>
+                <div className="text-sm text-slate-300 mt-1">Moderate Risk</div>
               </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                <span className="text-slate-600">{capabilities.filter(c => c.risk_level === 'High').length} High Risk Tasks</span>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
+                <div className="text-3xl font-bold text-red-400">
+                  {capabilities.filter(c => c.risk_level === 'High').length}
+                </div>
+                <div className="text-sm text-slate-300 mt-1">High Risk Tasks</div>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
+                <div className="text-3xl font-bold text-blue-400">
+                  {[...new Set(capabilities.map(c => c.industry))].length}
+                </div>
+                <div className="text-sm text-slate-300 mt-1">Industries</div>
               </div>
             </div>
           </div>
@@ -243,19 +261,70 @@ export default function AITrackerPage() {
 
       <div className="max-w-7xl mx-auto px-8 py-8">
         {/* Filters */}
-        <Card className="mb-8">
-          <CardHeader>
+        <Card className="mb-8 shadow-lg border-0">
+          <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50 border-b">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <Filter className="h-5 w-5 text-slate-600" />
-                <CardTitle>Filters & Search</CardTitle>
+                <CardTitle className="text-lg">Filters & Search</CardTitle>
+                <span className="text-sm text-slate-500">
+                  ({filteredCapabilities.length} of {capabilities.length} results)
+                </span>
               </div>
-              <Button variant="outline" onClick={resetFilters} className="text-sm">
+              <Button variant="outline" onClick={resetFilters} className="text-sm hover:bg-red-50 hover:text-red-600">
                 Clear All
               </Button>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
+            {/* Quick Filter Chips */}
+            <div className="mb-6">
+              <h4 className="text-sm font-medium text-slate-700 mb-3">Quick Filters</h4>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setFilters({...filters, riskLevel: 'High'})}
+                  className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
+                    filters.riskLevel === 'High' 
+                      ? 'border-red-500 bg-red-50 text-red-700' 
+                      : 'border-slate-300 hover:bg-slate-50'
+                  }`}
+                >
+                  🚨 High Risk ({capabilities.filter(c => c.risk_level === 'High').length})
+                </button>
+                <button
+                  onClick={() => setFilters({...filters, impactType: 'Replaced'})}
+                  className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
+                    filters.impactType === 'Replaced' 
+                      ? 'border-red-500 bg-red-50 text-red-700' 
+                      : 'border-slate-300 hover:bg-slate-50'
+                  }`}
+                >
+                  ⚡ Being Replaced ({capabilities.filter(c => c.impact_type === 'Replaced').length})
+                </button>
+                <button
+                  onClick={() => setFilters({...filters, mainWorkflow: 'Creative'})}
+                  className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
+                    filters.mainWorkflow === 'Creative' 
+                      ? 'border-purple-500 bg-purple-50 text-purple-700' 
+                      : 'border-slate-300 hover:bg-slate-50'
+                  }`}
+                >
+                  🎨 Creative Work ({capabilities.filter(c => c.main_workflow === 'Creative').length})
+                </button>
+                <button
+                  onClick={() => setFilters({...filters, mainWorkflow: 'Analysis'})}
+                  className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
+                    filters.mainWorkflow === 'Analysis' 
+                      ? 'border-blue-500 bg-blue-50 text-blue-700' 
+                      : 'border-slate-300 hover:bg-slate-50'
+                  }`}
+                >
+                  📊 Analysis ({capabilities.filter(c => c.main_workflow === 'Analysis').length})
+                </button>
+              </div>
+            </div>
+
+            {/* Detailed Filters */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-4">
               <div>
                 <label className="text-sm font-medium text-slate-700 mb-1 block">Industry</label>
@@ -341,76 +410,110 @@ export default function AITrackerPage() {
                 </div>
               </div>
             </div>
-            
-            <div className="text-sm text-slate-600">
-              Showing {filteredCapabilities.length} of {capabilities.length} capabilities
-            </div>
           </CardContent>
         </Card>
 
-        {/* Results Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCapabilities.map((capability) => (
-            <Card key={capability.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-lg">{capability.subroutine}</CardTitle>
-                    <CardDescription className="mt-1">
-                      {capability.industry} • {capability.role}
-                    </CardDescription>
-                  </div>
-                  <Badge 
-                    variant="outline" 
-                    className={getRiskBadgeColor(capability.risk_level)}
-                  >
-                    {capability.risk_level}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-slate-700">Workflow:</span>
-                    <Badge variant="outline">{capability.main_workflow}</Badge>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-slate-700">Impact:</span>
-                    <Badge 
-                      variant="outline" 
-                      className={getImpactBadgeColor(capability.impact_type)}
-                    >
-                      {capability.impact_type}
-                    </Badge>
-                  </div>
-
-                  <div>
-                    <span className="text-sm font-medium text-slate-700">AI Tool:</span>
-                    <div className="mt-1 flex items-center justify-between">
-                      <span className="text-sm text-slate-600">{capability.tools}</span>
-                      {capability.tool_urls && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0"
-                          onClick={() => window.open(capability.tool_urls, '_blank')}
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </Button>
-                      )}
+        {/* Results Table View */}
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-slate-50 border-b border-slate-200">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
+                      onClick={() => handleSort('subroutine')}>
+                    <div className="flex items-center space-x-2">
+                      <span>Task / Workflow</span>
+                      <ArrowUpDown className="h-4 w-4" />
                     </div>
-                  </div>
-
-                  <div className="pt-2 border-t">
-                    <div className="flex items-center space-x-2 text-xs text-slate-500">
-                      <span>Coverage: {capability.ai_coverage === 'PA' ? 'Partial' : 'Optimized'}</span>
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
+                      onClick={() => handleSort('industry')}>
+                    <div className="flex items-center space-x-2">
+                      <span>Industry</span>
+                      <ArrowUpDown className="h-4 w-4" />
                     </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
+                      onClick={() => handleSort('role')}>
+                    <div className="flex items-center space-x-2">
+                      <span>Role</span>
+                      <ArrowUpDown className="h-4 w-4" />
+                    </div>
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
+                      onClick={() => handleSort('risk_level')}>
+                    <div className="flex items-center space-x-2">
+                      <span>Risk Level</span>
+                      <ArrowUpDown className="h-4 w-4" />
+                    </div>
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
+                      onClick={() => handleSort('impact_type')}>
+                    <div className="flex items-center space-x-2">
+                      <span>Impact</span>
+                      <ArrowUpDown className="h-4 w-4" />
+                    </div>
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    AI Tool
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-slate-200">
+                {filteredCapabilities.map((capability, index) => (
+                  <tr key={capability.id} className={`hover:bg-slate-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-slate-25'}`}>
+                    <td className="px-6 py-4">
+                      <div>
+                        <div className="text-sm font-semibold text-slate-900">{capability.subroutine}</div>
+                        <div className="text-xs text-slate-500 mt-1">
+                          <Badge variant="outline" className="text-xs">
+                            {capability.main_workflow}
+                          </Badge>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-slate-900">{capability.industry}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-slate-900">{capability.role}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <Badge 
+                        variant="outline" 
+                        className={getRiskBadgeColor(capability.risk_level)}
+                      >
+                        {capability.risk_level}
+                      </Badge>
+                    </td>
+                    <td className="px-6 py-4">
+                      <Badge 
+                        variant="outline" 
+                        className={getImpactBadgeColor(capability.impact_type)}
+                      >
+                        {capability.impact_type}
+                      </Badge>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm text-slate-900">{capability.tools}</div>
+                        {capability.tool_urls && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 ml-2"
+                            onClick={() => window.open(capability.tool_urls, '_blank')}
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {filteredCapabilities.length === 0 && (
