@@ -41,6 +41,7 @@ export default function AITrackerPage() {
   const [capabilities, setCapabilities] = useState<AICapability[]>([]);
   const [filteredCapabilities, setFilteredCapabilities] = useState<AICapability[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<Filters>({
     industry: '',
     role: '',
@@ -51,11 +52,13 @@ export default function AITrackerPage() {
   });
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: null, direction: 'asc' });
 
-  // Initialize Supabase client
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-  );
+  // Initialize Supabase client safely
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  const supabase = supabaseUrl && supabaseKey 
+    ? createClient(supabaseUrl, supabaseKey)
+    : null;
 
   // Get unique values for filter dropdowns
   const uniqueIndustries = [...new Set(capabilities.map(c => c.industry))].sort();
@@ -74,6 +77,12 @@ export default function AITrackerPage() {
 
   const fetchCapabilities = async () => {
     try {
+      if (!supabase) {
+        setError('Database connection not configured. Please check environment variables.');
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('ai_capability_tracker')
         .select('*')
@@ -81,8 +90,10 @@ export default function AITrackerPage() {
 
       if (error) throw error;
       setCapabilities(data || []);
+      setError(null);
     } catch (error) {
       console.error('Error fetching capabilities:', error);
+      setError('Failed to load AI capabilities. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -174,6 +185,25 @@ export default function AITrackerPage() {
           <div className="text-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900 mx-auto"></div>
             <p className="mt-4 text-slate-600">Loading AI capabilities...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center py-20">
+            <div className="text-red-500 mb-4">
+              <ExternalLink className="h-12 w-12 mx-auto" />
+            </div>
+            <h2 className="text-2xl font-bold text-slate-900 mb-4">Unable to Load AI Tracker</h2>
+            <p className="text-slate-600 mb-6">{error}</p>
+            <Button onClick={() => window.location.reload()} variant="outline">
+              Try Again
+            </Button>
           </div>
         </div>
       </div>
