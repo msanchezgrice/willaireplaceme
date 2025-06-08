@@ -243,7 +243,9 @@ export default function AITrackerPage() {
                 <Link href="/ai-tracker" className="text-slate-900 bg-slate-100 px-3 py-2 text-sm font-medium rounded-md">
                   AI Capability Tracker
                 </Link>
-                <Link href="/#pricing" className="text-slate-600 hover:text-slate-900 px-3 py-2 text-sm font-medium transition-colors">Pricing</Link>
+                <Link href="/industry-risk-tracker" className="text-slate-600 hover:text-slate-900 px-3 py-2 text-sm font-medium transition-colors">
+                  Industry Risk Tracker
+                </Link>
                 
                 {/* Authentication Section */}
                 {isLoaded && (
@@ -433,11 +435,11 @@ export default function AITrackerPage() {
             {/* Detailed Filters */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-4">
               <div>
-                <label className="text-sm font-medium text-slate-700 mb-1 block">Industry</label>
+                <label className="text-sm font-medium text-slate-700 mb-2 block">Industry</label>
                 <select
                   value={filters.industry}
                   onChange={(e) => setFilters({...filters, industry: e.target.value})}
-                  className="w-full p-2 border rounded-md text-sm"
+                  className="w-full p-3 border-0 bg-slate-100 rounded-lg text-sm font-medium text-slate-700 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
                 >
                   <option value="">All Industries</option>
                   {uniqueIndustries.map(industry => (
@@ -447,11 +449,11 @@ export default function AITrackerPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-slate-700 mb-1 block">Role</label>
+                <label className="text-sm font-medium text-slate-700 mb-2 block">Role</label>
                 <select
                   value={filters.role}
                   onChange={(e) => setFilters({...filters, role: e.target.value})}
-                  className="w-full p-2 border rounded-md text-sm"
+                  className="w-full p-3 border-0 bg-slate-100 rounded-lg text-sm font-medium text-slate-700 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
                 >
                   <option value="">All Roles</option>
                   {uniqueRoles.map(role => (
@@ -461,11 +463,11 @@ export default function AITrackerPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-slate-700 mb-1 block">Risk Level</label>
+                <label className="text-sm font-medium text-slate-700 mb-2 block">Risk Level</label>
                 <select
                   value={filters.riskLevel}
                   onChange={(e) => setFilters({...filters, riskLevel: e.target.value})}
-                  className="w-full p-2 border rounded-md text-sm"
+                  className="w-full p-3 border-0 bg-slate-100 rounded-lg text-sm font-medium text-slate-700 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
                 >
                   <option value="">All Risk Levels</option>
                   {uniqueRiskLevels.map(level => (
@@ -475,11 +477,11 @@ export default function AITrackerPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-slate-700 mb-1 block">Impact Type</label>
+                <label className="text-sm font-medium text-slate-700 mb-2 block">Impact Type</label>
                 <select
                   value={filters.impactType}
                   onChange={(e) => setFilters({...filters, impactType: e.target.value})}
-                  className="w-full p-2 border rounded-md text-sm"
+                  className="w-full p-3 border-0 bg-slate-100 rounded-lg text-sm font-medium text-slate-700 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
                 >
                   <option value="">All Impact Types</option>
                   {uniqueImpactTypes.map(type => (
@@ -489,11 +491,11 @@ export default function AITrackerPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-slate-700 mb-1 block">Workflow</label>
+                <label className="text-sm font-medium text-slate-700 mb-2 block">Workflow</label>
                 <select
                   value={filters.mainWorkflow}
                   onChange={(e) => setFilters({...filters, mainWorkflow: e.target.value})}
-                  className="w-full p-2 border rounded-md text-sm"
+                  className="w-full p-3 border-0 bg-slate-100 rounded-lg text-sm font-medium text-slate-700 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
                 >
                   <option value="">All Workflows</option>
                   {uniqueWorkflows.map(workflow => (
@@ -503,11 +505,11 @@ export default function AITrackerPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-slate-700 mb-1 block">AI Coverage</label>
+                <label className="text-sm font-medium text-slate-700 mb-2 block">AI Coverage</label>
                 <select
                   value={filters.ai_coverage}
                   onChange={(e) => setFilters({...filters, ai_coverage: e.target.value})}
-                  className="w-full p-2 border rounded-md text-sm"
+                  className="w-full p-3 border-0 bg-slate-100 rounded-lg text-sm font-medium text-slate-700 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
                 >
                   <option value="">All AI Coverage</option>
                   <option value="PA">Partial Automation</option>
@@ -517,15 +519,15 @@ export default function AITrackerPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-slate-700 mb-1 block">Search</label>
+                <label className="text-sm font-medium text-slate-700 mb-2 block">Search</label>
                 <div className="relative">
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                  <Search className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
                   <input
                     type="text"
                     placeholder="Search tasks, tools..."
                     value={filters.search}
                     onChange={(e) => setFilters({...filters, search: e.target.value})}
-                    className="w-full pl-10 pr-3 py-2 border rounded-md text-sm"
+                    className="w-full pl-10 pr-3 py-3 border-0 bg-slate-100 rounded-lg text-sm font-medium text-slate-700 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
                   />
                 </div>
               </div>

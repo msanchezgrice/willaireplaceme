@@ -1,0 +1,31 @@
+id,industry,role,sub_role,main_workflow,subroutine,risk_level,ai_coverage,impact_type,tools,tool_urls
+fbf7b13c,Design,UX/UI Designer,General,Wireframing,Generate low‑fidelity wireframes,Moderate,PA,Complemented,Uizard,https://uizard.io/wireframing/
+dcae1baf,Design,UX/UI Designer,General,Mock‑ups,Create high‑fidelity mock‑ups,Moderate,PA,Complemented,Galileo AI,https://www.usegalileo.ai/
+40f2acfb,Design,Graphic Designer,General,Illustration,Produce campaign illustration,High,FR,Replaced,Adobe Firefly,https://www.adobe.com/products/firefly.html
+10b803bf,Design,Graphic Designer,General,Marketing graphics,Auto‑generate social media visuals,Moderate,PA,Complemented,Canva Magic Design,https://www.canva.com/magic-design/
+aa27c856,Design,Accessibility Specialist,General,Audit,Detect accessibility issues in designs,Low,AO,Complemented,Stark AI,https://www.getstark.co
+31493f6f,Marketing,Content Marketer,General,Blog writing,Outline blog article,High,FR,Replaced,Jasper,https://www.jasper.ai/prompts/writing-blog-posts
+86779590,Marketing,Content Marketer,General,Blog writing,Draft long‑form blog post,High,FR,Replaced,Jasper,https://www.jasper.ai/prompts/writing-blog-posts
+5840e70b,Marketing,SEO Specialist,General,Keyword research,Cluster long‑tail keywords,High,FR,Replaced,SurferSEO,https://surferseo.com/blog/keyword-clustering/
+fcbec363,Marketing,Social Media Manager,General,Social captions,Generate Instagram caption,High,FR,Replaced,Copy.ai,https://www.copy.ai/tools/instagram-caption-generator
+18223e11,Marketing,Performance Marketer,General,Ad bidding,Optimize Google Ads bids,High,FR,Replaced,Google Performance Max,https://support.google.com/google-ads/answer/10724817
+e94fcdff,Legal,Paralegal,General,Contract review,Summarize incoming contract,High,FR,Replaced,LawGeex,https://www.lawgeex.com/
+0da44916,Legal,Paralegal,General,Clause analysis,Flag risky clauses,High,FR,Replaced,Kira Systems,https://kirasystems.com/
+4864a35d,Legal,Associate Attorney,General,Research,Draft case‑law memo,High,FR,Replaced,Lexis+ AI,https://www.lexisnexis.com/en-us/products/lexis-plus-ai.page
+fe652225,Legal,Associate Attorney,General,Drafting,Generate clause suggestions,Moderate,PA,Complemented,Harvey AI,https://www.harvey.ai/
+7a76c40f,Legal,Senior Attorney,General,Brief editing,Insert supporting citations,Low,AO,Complemented,Clearbrief,https://www.clearbrief.com
+bfa1f472,Software Eng,Junior Developer,General,Code generation,Generate boilerplate code,High,FR,Replaced,GitHub Copilot,https://github.com/features/copilot
+955890eb,Software Eng,Developer,General,Code suggestion,Get real‑time code hints,Moderate,PA,Complemented,Amazon CodeWhisperer,https://docs.aws.amazon.com/codewhisperer/latest/userguide/what-is-cwspr.html
+0d26e87a,Software Eng,QA Engineer,General,Testing,Generate unit tests,High,FR,Replaced,Diffblue Cover,https://www.diffblue.com/
+ad181962,Software Eng,DevOps Engineer,General,Infrastructure as Code,Generate Terraform script,Moderate,PA,Complemented,HashiCorp Ai/Code,https://developer.hashicorp.com/terraform/cloud/aicode
+30d338a1,Software Eng,SDET,General,Testing,Generate UI test cases,Moderate,PA,Complemented,Testim,https://www.testim.io
+a55c1e09,Education,Teacher,General,Lesson planning,Plan lesson outline,Moderate,PA,Complemented,Khanmigo,https://www.khanacademy.org/khan-labs
+b04e874b,Education,Tutor,General,Assessment,Generate practice quiz,Moderate,PA,Complemented,Quizlet Q-Chat,https://help.quizlet.com/hc/en-us/articles/18811152410125-Studying-with-Q-Chat
+ba0ebaf4,Education,Language Instructor,General,Tutoring,Conduct conversational practice,Moderate,PA,Complemented,Duolingo Max,https://www.duolingo.com/
+70e63523,Education,Instructor,General,Grading,AI‑assisted essay grading,Moderate,PA,Complemented,Gradescope AI,https://www.gradescope.com/
+ac0efc28,Education,Curriculum Designer,General,Adaptive learning,Build adaptive study module,Moderate,PA,Complemented,Knewton Alta,https://www.knewton.com
+dfbd9200,Art,Concept Artist,General,Concept art,Generate concept art,High,FR,Replaced,Midjourney,https://www.midjourney.com/
+e1ea12a8,Art,Video Creator,General,Video generation,Generate short AI video,High,FR,Replaced,Runway Gen‑2,https://www.runwayml.com/
+b2a4579e,Art,Illustrator,General,Asset variation,Create style variations,High,FR,Replaced,Leonardo AI,https://leonardo.ai/
+45457d3f,Art,Digital Artist,General,Image editing,Inpaint / expand images,High,FR,Replaced,Adobe Firefly,https://www.adobe.com/products/firefly.html
+6a437359,Art,Motion Designer,General,Animation,Turn images into animation,High,FR,Replaced,Runway Gen‑2,https://www.runwayml.com/
