@@ -6,7 +6,7 @@ import { ClerkProvider } from '@clerk/nextjs';
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://willaireplace.me"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://willaireplace.me"),
   title: "Career Guard - Will AI Replace Your Career?",
   description: "Get your AI replacement risk assessment with personalized strategies to future-proof your career",
   keywords: ["AI career risk", "career assessment", "AI replacement", "future-proof career", "career protection"],
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Career Guard - Will AI Replace Your Career?",
     description: "Get your AI replacement risk assessment with personalized strategies to future-proof your career",
-    url: "https://willaireplace.me",
+    url: process.env.NEXT_PUBLIC_APP_URL || "https://willaireplace.me",
     siteName: "Career Guard",
     images: [
       {
