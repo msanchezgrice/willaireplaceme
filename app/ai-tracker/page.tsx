@@ -5,7 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { createClient } from '@supabase/supabase-js';
-import { ExternalLink, Filter, Search, ArrowUpDown, Bot } from 'lucide-react';
+import { ExternalLink, Filter, Search, ArrowUpDown, Bot, Menu, LogIn, User, ChartLine } from 'lucide-react';
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useUser, UserButton } from "@clerk/nextjs";
+import { Logo } from "@/components/logo";
 
 interface AICapability {
   id: string;
@@ -38,6 +42,8 @@ interface SortConfig {
 }
 
 export default function AITrackerPage() {
+  const router = useRouter();
+  const { isSignedIn, user, isLoaded } = useUser();
   const [capabilities, setCapabilities] = useState<AICapability[]>([]);
   const [filteredCapabilities, setFilteredCapabilities] = useState<AICapability[]>([]);
   const [loading, setLoading] = useState(true);
@@ -212,6 +218,90 @@ export default function AITrackerPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      {/* Navigation */}
+      <nav className="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <Link href="/" className="hover:opacity-75 transition-opacity">
+                  <Logo size="md" variant="light" showText={true} />
+                </Link>
+              </div>
+            </div>
+            <div className="hidden md:block">
+              <div className="ml-10 flex items-baseline space-x-8">
+                <Link href="/" className="text-slate-600 hover:text-slate-900 px-3 py-2 text-sm font-medium transition-colors">Home</Link>
+                <Link href="/#how-it-works" className="text-slate-600 hover:text-slate-900 px-3 py-2 text-sm font-medium transition-colors">How It Works</Link>
+                <Link href="/#careers" className="text-slate-600 hover:text-slate-900 px-3 py-2 text-sm font-medium transition-colors">Career Categories</Link>
+                <Link href="/ai-tracker" className="text-slate-900 bg-slate-100 px-3 py-2 text-sm font-medium rounded-md">
+                  AI Capability Tracker
+                </Link>
+                <Link href="/#pricing" className="text-slate-600 hover:text-slate-900 px-3 py-2 text-sm font-medium transition-colors">Pricing</Link>
+                
+                {/* Authentication Section */}
+                {isLoaded && (
+                  <>
+                    {isSignedIn ? (
+                      <div className="flex items-center space-x-4">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => router.push('/dashboard')}
+                        >
+                          <User className="w-4 h-4 mr-2" />
+                          Dashboard
+                        </Button>
+                        <UserButton 
+                          appearance={{
+                            elements: {
+                              avatarBox: "w-8 h-8"
+                            }
+                          }}
+                          userProfileMode="navigation"
+                          userProfileUrl="/dashboard"
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex items-center space-x-3">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => router.push('/sign-in')}
+                        >
+                          <LogIn className="w-4 h-4 mr-2" />
+                          Sign In
+                        </Button>
+                        <Link href="/intake">
+                          <Button size="sm">
+                            <ChartLine className="w-4 h-4 mr-2" />
+                            Start Assessment
+                          </Button>
+                        </Link>
+                      </div>
+                    )}
+                  </>
+                )}
+                
+                {!isLoaded && (
+                  <Link href="/intake">
+                    <Button size="sm">
+                      <ChartLine className="w-4 h-4 mr-2" />
+                      Start Assessment
+                    </Button>
+                  </Link>
+                )}
+              </div>
+            </div>
+            <div className="md:hidden">
+              <Button variant="ghost" size="sm">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
       {/* Header */}
       <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
         <div className="max-w-7xl mx-auto px-8 py-16">
@@ -526,6 +616,25 @@ export default function AITrackerPage() {
           </div>
         )}
       </div>
+
+      {/* Footer */}
+      <footer className="bg-slate-900 text-white py-8 sm:py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <div className="flex justify-center mb-4">
+              <Logo size="lg" variant="dark" showText={true} />
+            </div>
+            <p className="text-slate-300 mb-4">
+              Protecting careers in the age of artificial intelligence
+            </p>
+            <div className="flex justify-center space-x-6 text-slate-400">
+              <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
+              <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
+              <a href="#" className="hover:text-white transition-colors">Contact</a>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 } 
