@@ -33,6 +33,7 @@ interface Filters {
   riskLevel: string;
   impactType: string;
   mainWorkflow: string;
+  ai_coverage: string;
   search: string;
 }
 
@@ -54,6 +55,7 @@ export default function AITrackerPage() {
     riskLevel: '',
     impactType: '',
     mainWorkflow: '',
+    ai_coverage: '',
     search: ''
   });
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: null, direction: 'asc' });
@@ -124,6 +126,9 @@ export default function AITrackerPage() {
     if (filters.mainWorkflow) {
       filtered = filtered.filter(c => c.main_workflow === filters.mainWorkflow);
     }
+    if (filters.ai_coverage) {
+      filtered = filtered.filter(c => c.ai_coverage === filters.ai_coverage);
+    }
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
       filtered = filtered.filter(c => 
@@ -165,6 +170,7 @@ export default function AITrackerPage() {
       riskLevel: '',
       impactType: '',
       mainWorkflow: '',
+      ai_coverage: '',
       search: ''
     });
   };
@@ -411,6 +417,16 @@ export default function AITrackerPage() {
                 >
                   📊 Analysis ({capabilities.filter(c => c.main_workflow === 'Analysis').length})
                 </button>
+                <button
+                  onClick={() => setFilters({...filters, ai_coverage: 'FR'})}
+                  className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
+                    filters.ai_coverage === 'FR' 
+                      ? 'border-red-500 bg-red-50 text-red-700' 
+                      : 'border-slate-300 hover:bg-slate-50'
+                  }`}
+                >
+                  🚫 Fully Replaced ({capabilities.filter(c => c.ai_coverage === 'FR').length})
+                </button>
               </div>
             </div>
 
@@ -483,6 +499,20 @@ export default function AITrackerPage() {
                   {uniqueWorkflows.map(workflow => (
                     <option key={workflow} value={workflow}>{workflow}</option>
                   ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-slate-700 mb-1 block">AI Coverage</label>
+                <select
+                  value={filters.ai_coverage}
+                  onChange={(e) => setFilters({...filters, ai_coverage: e.target.value})}
+                  className="w-full p-2 border rounded-md text-sm"
+                >
+                  <option value="">All AI Coverage</option>
+                  <option value="PA">Partial Automation</option>
+                  <option value="AO">Automated Optimized</option>
+                  <option value="FR">Fully Replaced</option>
                 </select>
               </div>
 
