@@ -49,6 +49,7 @@ export default function AITrackerPage() {
   const [filteredCapabilities, setFilteredCapabilities] = useState<AICapability[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [filters, setFilters] = useState<Filters>({
     industry: '',
     role: '',
@@ -300,11 +301,109 @@ export default function AITrackerPage() {
               </div>
             </div>
             <div className="md:hidden">
-              <Button variant="ghost" size="sm">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
                 <Menu className="h-5 w-5" />
               </Button>
             </div>
           </div>
+          
+          {/* Mobile Menu */}
+          {mobileMenuOpen && (
+            <div className="md:hidden border-t border-slate-200 bg-white">
+              <div className="px-2 pt-2 pb-3 space-y-1">
+                <Link 
+                  href="/" 
+                  className="block px-3 py-2 text-base font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-md"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Home
+                </Link>
+                <Link 
+                  href="/ai-tracker" 
+                  className="block px-3 py-2 text-base font-medium text-slate-900 bg-slate-100 rounded-md"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  AI Capability Tracker
+                </Link>
+                <Link 
+                  href="/industry-risk-tracker" 
+                  className="block px-3 py-2 text-base font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-md"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Industry Risk Tracker
+                </Link>
+                
+                {/* Mobile Authentication */}
+                <div className="pt-4 border-t border-slate-200">
+                  {isLoaded && (
+                    <>
+                      {isSignedIn ? (
+                        <div className="space-y-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="w-full justify-start"
+                            onClick={() => {
+                              router.push('/dashboard');
+                              setMobileMenuOpen(false);
+                            }}
+                          >
+                            <User className="w-4 h-4 mr-2" />
+                            Dashboard
+                          </Button>
+                          <div className="px-3 py-2">
+                            <UserButton 
+                              appearance={{
+                                elements: {
+                                  avatarBox: "w-8 h-8"
+                                }
+                              }}
+                              userProfileMode="navigation"
+                              userProfileUrl="/dashboard"
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            className="w-full justify-start"
+                            onClick={() => {
+                              router.push('/sign-in');
+                              setMobileMenuOpen(false);
+                            }}
+                          >
+                            <LogIn className="w-4 h-4 mr-2" />
+                            Sign In
+                          </Button>
+                          <Link href="/intake" onClick={() => setMobileMenuOpen(false)}>
+                            <Button size="sm" className="w-full">
+                              <ChartLine className="w-4 h-4 mr-2" />
+                              Start Assessment
+                            </Button>
+                          </Link>
+                        </div>
+                      )}
+                    </>
+                  )}
+                  
+                  {!isLoaded && (
+                    <Link href="/intake" onClick={() => setMobileMenuOpen(false)}>
+                      <Button size="sm" className="w-full">
+                        <ChartLine className="w-4 h-4 mr-2" />
+                        Start Assessment
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </nav>
 
@@ -658,9 +757,8 @@ export default function AITrackerPage() {
               Protecting careers in the age of artificial intelligence
             </p>
             <div className="flex justify-center space-x-6 text-slate-400">
-              <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-              <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
-              <a href="#" className="hover:text-white transition-colors">Contact</a>
+              <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+              <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
             </div>
           </div>
         </div>

@@ -45,6 +45,7 @@ export default function IndustryRiskTrackerPage() {
   const [filteredIndustries, setFilteredIndustries] = useState<IndustryRisk[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [filters, setFilters] = useState<Filters>({
     industry: '',
     riskLevel: '',
@@ -562,9 +563,8 @@ export default function IndustryRiskTrackerPage() {
               Protecting careers in the age of artificial intelligence
             </p>
             <div className="flex justify-center space-x-6 text-slate-400">
-              <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-              <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
-              <a href="#" className="hover:text-white transition-colors">Contact</a>
+              <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+              <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
             </div>
           </div>
         </div>
