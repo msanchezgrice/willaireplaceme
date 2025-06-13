@@ -25,7 +25,7 @@ export default function TermsOfService() {
 
           <h2>1. Acceptance of Terms</h2>
           <p>
-            By accessing and using Career Guard ("Service"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
+            By accessing and using Career Guard (&quot;Service&quot;), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
           </p>
 
           <h2>2. Description of Service</h2>
@@ -83,7 +83,7 @@ export default function TermsOfService() {
           
           <h3>7.1 Service Availability</h3>
           <p>
-            We strive to maintain the Service, but we cannot guarantee 100% uptime. The Service is provided "as is" and "as available" without any warranties of any kind.
+            We strive to maintain the Service, but we cannot guarantee 100% uptime. The Service is provided &quot;as is&quot; and &quot;as available&quot; without any warranties of any kind.
           </p>
 
           <h3>7.2 Assessment Accuracy</h3>

@@ -25,7 +25,7 @@ export default function PrivacyPolicy() {
 
           <h2>1. Introduction</h2>
           <p>
-            Career Guard ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website careerguard.me and use our AI career risk assessment services.
+            Career Guard (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website careerguard.me and use our AI career risk assessment services.
           </p>
 
           <h2>2. Information We Collect</h2>
@@ -98,7 +98,7 @@ export default function PrivacyPolicy() {
             Our website may contain links to third-party websites. We are not responsible for the privacy practices of these external sites. We encourage you to review their privacy policies.
           </p>
 
-          <h2>9. Children's Privacy</h2>
+          <h2>9. Children&apos;s Privacy</h2>
           <p>
             Our services are not intended for individuals under 18 years of age. We do not knowingly collect personal information from children under 18.
           </p>
